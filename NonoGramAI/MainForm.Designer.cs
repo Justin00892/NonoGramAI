@@ -32,6 +32,7 @@
             this.sideListPanel = new System.Windows.Forms.TableLayoutPanel();
             this.topListPanel = new System.Windows.Forms.TableLayoutPanel();
             this.gridPanel = new System.Windows.Forms.TableLayoutPanel();
+            this.openFileDialog = new System.Windows.Forms.OpenFileDialog();
             this.mainPanel.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -42,10 +43,12 @@
             this.mainPanel.Controls.Add(this.sideListPanel);
             this.mainPanel.Controls.Add(this.topListPanel);
             this.mainPanel.Controls.Add(this.gridPanel);
-            this.mainPanel.Location = new System.Drawing.Point(13, 13);
+            this.mainPanel.Location = new System.Drawing.Point(17, 16);
+            this.mainPanel.Margin = new System.Windows.Forms.Padding(4);
             this.mainPanel.Name = "mainPanel";
-            this.mainPanel.Size = new System.Drawing.Size(103, 103);
+            this.mainPanel.Size = new System.Drawing.Size(137, 127);
             this.mainPanel.TabIndex = 0;
+            this.mainPanel.Visible = false;
             // 
             // sideListPanel
             // 
@@ -53,7 +56,8 @@
             this.sideListPanel.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.sideListPanel.ColumnCount = 1;
             this.sideListPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.sideListPanel.Location = new System.Drawing.Point(0, 100);
+            this.sideListPanel.Location = new System.Drawing.Point(0, 123);
+            this.sideListPanel.Margin = new System.Windows.Forms.Padding(4);
             this.sideListPanel.Name = "sideListPanel";
             this.sideListPanel.RowCount = 1;
             this.sideListPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
@@ -67,7 +71,8 @@
             this.topListPanel.ColumnCount = 1;
             this.topListPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.topListPanel.GrowStyle = System.Windows.Forms.TableLayoutPanelGrowStyle.AddColumns;
-            this.topListPanel.Location = new System.Drawing.Point(100, 0);
+            this.topListPanel.Location = new System.Drawing.Point(133, 0);
+            this.topListPanel.Margin = new System.Windows.Forms.Padding(4);
             this.topListPanel.Name = "topListPanel";
             this.topListPanel.RowCount = 1;
             this.topListPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
@@ -80,7 +85,7 @@
             this.gridPanel.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.gridPanel.ColumnCount = 1;
             this.gridPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
-            this.gridPanel.Location = new System.Drawing.Point(100, 100);
+            this.gridPanel.Location = new System.Drawing.Point(133, 123);
             this.gridPanel.Margin = new System.Windows.Forms.Padding(0);
             this.gridPanel.Name = "gridPanel";
             this.gridPanel.RowCount = 1;
@@ -90,12 +95,13 @@
             // 
             // MainForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSize = true;
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.ClientSize = new System.Drawing.Size(631, 632);
+            this.ClientSize = new System.Drawing.Size(841, 778);
             this.Controls.Add(this.mainPanel);
+            this.Margin = new System.Windows.Forms.Padding(4);
             this.Name = "MainForm";
             this.Text = "Nonogram AI";
             this.mainPanel.ResumeLayout(false);
@@ -111,6 +117,7 @@
         private System.Windows.Forms.TableLayoutPanel gridPanel;
         private System.Windows.Forms.TableLayoutPanel sideListPanel;
         private System.Windows.Forms.TableLayoutPanel topListPanel;
+        private System.Windows.Forms.OpenFileDialog openFileDialog;
     }
 }
 
