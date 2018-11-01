@@ -3,17 +3,17 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using NonoGramAI.Entities;
+using NonoGramAI.Properties;
 
 namespace NonoGramAI
 {
     public partial class MainForm : Form
     {
-        private int _size;
-        private Tile[,] _tiles;
-        private List<Hint> _topHints = new List<Hint>();
-        private List<Hint> _sideHints = new List<Hint>();
+        private Grid _grid;
+        private Settings _settings = Settings.Default;
 
         public MainForm()
         {
@@ -25,12 +25,14 @@ namespace NonoGramAI
                 Application.Exit();
                 return;
             }
-
+            var topHints = new List<Hint>();
+            var sideHints = new List<Hint>();
             using (var reader = new StreamReader(openFileDialog.FileName))
             {
                 //skips top line
                 reader.ReadLine();
                 var hintString = reader.ReadLine();
+                
                 while (hintString != "Side Hints" && hintString != null)
                 {
                     var hintStringList = hintString.Split(',').ToList();
@@ -38,7 +40,7 @@ namespace NonoGramAI
                     foreach (var str in hintStringList)
                         hintList.Add(int.Parse(str));
 
-                    _topHints.Add(new Hint(hintList,true)
+                    topHints.Add(new Hint(hintList,true)
                     {
                         Width = 30, Height = 100, 
                         TextAlign = ContentAlignment.BottomCenter
@@ -54,7 +56,7 @@ namespace NonoGramAI
                     foreach (var str in hintStringList)
                         hintList.Add(int.Parse(str));
 
-                    _sideHints.Add(new Hint(hintList,false)
+                    sideHints.Add(new Hint(hintList,false)
                     {
                         Width = 100, Height = 30, 
                         TextAlign = ContentAlignment.MiddleRight
@@ -63,34 +65,28 @@ namespace NonoGramAI
                 }
             }
 
-            if (_topHints.Count != _sideHints.Count)
+            if (topHints.Count != sideHints.Count)
             {
                 Application.Exit();
                 return;
             }
-            _size = _topHints.Count;
-            SetUpGrid();
-        }
-
-        //sets up grid
-        private void SetUpGrid()
-        {
-            gridPanel.RowCount = _size;
-            gridPanel.ColumnCount = _size;
+            var size = topHints.Count;
+            gridPanel.RowCount = size;
+            gridPanel.ColumnCount = size;
             gridPanel.Controls.Clear();
 
-            _tiles = new Tile[_size, _size];
-            for (var i = 0; i < _size; i++)
+            var tiles = new Tile[size, size];
+            for (var i = 0; i < size; i++)
             {
-                for (var j = 0; j < _size; j++)
+                for (var j = 0; j < size; j++)
                 {
                     var tile = new Tile(i, j);
                     tile.Click += (sender, args) =>
                     {
                         tile.State = !tile.State;
-                        CheckScore();
+                        UpdateScore();
                     };
-                    _tiles[i, j] = tile;
+                    tiles[i, j] = tile;
                     gridPanel.Controls.Add(tile);
                     gridPanel.SetRow(tile, i);
                     gridPanel.SetColumn(tile, j);
@@ -98,128 +94,76 @@ namespace NonoGramAI
             }
 
             //sets up top hints
-            topListPanel.ColumnCount = _size;
+            topListPanel.ColumnCount = size;
 
-            for (var i = 0; i < _topHints.Count; i++)
+            for (var i = 0; i < topHints.Count; i++)
             {
-                var hint = _topHints[i];
+                var hint = topHints[i];
                 topListPanel.Controls.Add(hint);
                 topListPanel.SetColumn(hint, i);
             }
 
             //sets up side hints
-            sideListPanel.RowCount = _size;
+            sideListPanel.RowCount = size;
 
-            for (var j = 0; j < _size; j++)
+            for (var j = 0; j < size; j++)
             {
-                var hint = _sideHints[j];
+                var hint = sideHints[j];
                 sideListPanel.Controls.Add(hint);
                 sideListPanel.SetRow(hint, j);
             }
+            _grid = new Grid(size,tiles,topHints,sideHints);
 
             mainPanel.Show();
         }
 
-        private void CheckScore()
+        private void UpdateScore()
         {
             var score = 0;
-            //checks columns
-            for (var i = 0; i < _size; i++)
+            for (var i = 0; i < _grid.Size; i++)
             {
                 var column = new LinkedList<Tile>();
-                for(var j = 0; j <_size; j++)
-                    column.AddLast((Tile) gridPanel.GetControlFromPosition(i,j));
-
-                var consecutiveList = new List<int>();
-                var current = column.First;
-                var count = 0;
-                while (current != null)
-                {
-                    if (current.Value.State)
-                        count++;
-                    else if(count > 0)
-                    {
-                        consecutiveList.Add(count);
-                        count = 0;
-                    }
-
-                    current = current.Next;
-                }
-                if(count > 0) consecutiveList.Add(count);
-
-                var hintList = _topHints[i].Hints;
-                var tempScore = 0;
-                if (consecutiveList.Count <= hintList.Count)
-                {
-                    for (var x = 0; x < hintList.Count; x++)
-                    {
-                        if (x >= consecutiveList.Count) break;
-                        if (consecutiveList[x] == hintList[x]) tempScore++;
-                    }
-                    topListPanel.GetControlFromPosition(i, 0)
-                            .Enabled = tempScore != hintList.Count;
-                    if (tempScore == hintList.Count) tempScore++;
-                }
-                else topListPanel.GetControlFromPosition(i, 0)
-                        .Enabled = true;
-                    
-                score += tempScore;
-            }
-
-            //checks rows
-            for (var i = 0; i < _size; i++)
-            {
                 var row = new LinkedList<Tile>();
-                for(var j = 0; j <_size; j++)
+                for (var j = 0; j < _grid.Size; j++)
+                {
+                    column.AddLast((Tile) gridPanel.GetControlFromPosition(i,j));
                     row.AddLast((Tile) gridPanel.GetControlFromPosition(j,i));
-
-                var consecutiveList = new List<int>();
-                var current = row.First;
-                var count = 0;
-                while (current != null)
-                {
-                    if (current.Value.State)
-                        count++;
-                    else if(count > 0)
-                    {
-                        consecutiveList.Add(count);
-                        count = 0;
-                    }
-
-                    current = current.Next;
                 }
-                if(count > 0) consecutiveList.Add(count);
-
-                var hintList = _sideHints[i].Hints;
-                var tempScore = 0;
-                if (consecutiveList.Count <= hintList.Count)
-                {
-                    for (var x = 0; x < hintList.Count; x++)
-                    {
-                        if (x >= consecutiveList.Count) break;
-                        if (consecutiveList[x] == hintList[x]) tempScore++;
-                    }
-                    sideListPanel.GetControlFromPosition(0,i)
-                            .Enabled = tempScore != hintList.Count;
-                    if (tempScore == hintList.Count) tempScore++;
-                }
-                else sideListPanel.GetControlFromPosition(0,i)
-                    .Enabled = true;
                     
+                //checks columns
+                var hintList = _grid.TopHints[i].Hints;
+                var tempScore = Algorithm.CheckScore(column, hintList);
+                topListPanel.GetControlFromPosition(i,0)
+                        .Enabled = tempScore-1 != hintList.Count;                   
+                score += tempScore;
+
+                //checks rows
+                hintList = _grid.SideHints[i].Hints;
+                tempScore = Algorithm.CheckScore(row, hintList);
+                sideListPanel.GetControlFromPosition(0,i)
+                        .Enabled = tempScore-1 != hintList.Count;                    
                 score += tempScore;
             }
 
             scoreLabel.Text = "Score: " + score;
         }
 
-        private void runAIButton_Click(object sender, EventArgs e)
+        private async void runAIButton_Click(object sender, EventArgs e)
         {
-            var rnd = new Random();
-            foreach (var tile in _tiles)
+            switch (_settings.Algorithm)
             {
-                tile.State = rnd.NextDouble() >= .5;
+                case 0: _grid = await Task<Grid>.Factory.StartNew(
+                        () => Algorithm.Random(_grid));
+                    break;
+                case 1:
+                    _grid = await Task<Grid>.Factory.StartNew(
+                        () => Algorithm.Genetic(_grid));
+                    break;
+                default: _grid = await Task<Grid>.Factory.StartNew(
+                        () => Algorithm.Random(_grid));
+                    break;
             }
-            CheckScore();
+            UpdateScore();
         }
     }
 }

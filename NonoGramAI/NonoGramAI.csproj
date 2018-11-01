@@ -46,6 +46,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Entities\Algorithm.cs" />
+    <Compile Include="Entities\Grid.cs" />
     <Compile Include="Entities\Hint.cs">
       <SubType>Component</SubType>
     </Compile>
