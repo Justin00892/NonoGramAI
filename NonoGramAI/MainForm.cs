@@ -157,6 +157,7 @@ namespace NonoGramAI
                 }
                 topListPanel.GetControlFromPosition(i, 0)
                         .Enabled = tempScore != hintList.Count;
+                if (tempScore == hintList.Count) tempScore++;
                 score += tempScore;
             }
 
@@ -194,6 +195,7 @@ namespace NonoGramAI
                 }
                 sideListPanel.GetControlFromPosition(0,i)
                         .Enabled = tempScore != hintList.Count;
+                if (tempScore == hintList.Count) tempScore++;
                 score += tempScore;
             }
 
