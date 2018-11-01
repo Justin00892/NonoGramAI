@@ -149,15 +149,20 @@ namespace NonoGramAI
 
                 var hintList = _topHints[i].Hints;
                 var tempScore = 0;
-                for (var x = 0; x < hintList.Count; x++)
+                if (consecutiveList.Count <= hintList.Count)
                 {
-                    if (x >= consecutiveList.Count || 
-                        consecutiveList.Count > hintList.Count) break;
-                    if (consecutiveList[x] == hintList[x]) tempScore++;
+                    for (var x = 0; x < hintList.Count; x++)
+                    {
+                        if (x >= consecutiveList.Count) break;
+                        if (consecutiveList[x] == hintList[x]) tempScore++;
+                    }
+                    topListPanel.GetControlFromPosition(i, 0)
+                            .Enabled = tempScore != hintList.Count;
+                    if (tempScore == hintList.Count) tempScore++;
                 }
-                topListPanel.GetControlFromPosition(i, 0)
-                        .Enabled = tempScore != hintList.Count;
-                if (tempScore == hintList.Count) tempScore++;
+                else topListPanel.GetControlFromPosition(i, 0)
+                        .Enabled = true;
+                    
                 score += tempScore;
             }
 
@@ -187,15 +192,20 @@ namespace NonoGramAI
 
                 var hintList = _sideHints[i].Hints;
                 var tempScore = 0;
-                for (var x = 0; x < hintList.Count; x++)
+                if (consecutiveList.Count <= hintList.Count)
                 {
-                    if (x >= consecutiveList.Count || 
-                        consecutiveList.Count > hintList.Count) break;
-                    if (consecutiveList[x] == hintList[x]) tempScore++;
+                    for (var x = 0; x < hintList.Count; x++)
+                    {
+                        if (x >= consecutiveList.Count) break;
+                        if (consecutiveList[x] == hintList[x]) tempScore++;
+                    }
+                    sideListPanel.GetControlFromPosition(0,i)
+                            .Enabled = tempScore != hintList.Count;
+                    if (tempScore == hintList.Count) tempScore++;
                 }
-                sideListPanel.GetControlFromPosition(0,i)
-                        .Enabled = tempScore != hintList.Count;
-                if (tempScore == hintList.Count) tempScore++;
+                else sideListPanel.GetControlFromPosition(0,i)
+                    .Enabled = true;
+                    
                 score += tempScore;
             }
 
@@ -204,6 +214,11 @@ namespace NonoGramAI
 
         private void runAIButton_Click(object sender, EventArgs e)
         {
+            var rnd = new Random();
+            foreach (var tile in _tiles)
+            {
+                tile.State = rnd.NextDouble() >= .5;
+            }
             CheckScore();
         }
     }
