@@ -32,12 +32,6 @@ namespace NonoGramAI.Entities
             BackColor = Color.White;
             BorderStyle = BorderStyle.FixedSingle;
 
-            Click += OnClick;
-        }
-
-        private void OnClick(object sender, EventArgs e)
-        {
-            State = !State;
         }
     }
 }

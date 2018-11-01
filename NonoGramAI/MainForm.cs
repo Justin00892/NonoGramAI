@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -76,6 +77,7 @@ namespace NonoGramAI
         {
             gridPanel.RowCount = _size;
             gridPanel.ColumnCount = _size;
+            gridPanel.Controls.Clear();
 
             _tiles = new Tile[_size, _size];
             for (var i = 0; i < _size; i++)
@@ -83,7 +85,11 @@ namespace NonoGramAI
                 for (var j = 0; j < _size; j++)
                 {
                     var tile = new Tile(i, j);
-
+                    tile.Click += (sender, args) =>
+                    {
+                        tile.State = !tile.State;
+                        CheckScore();
+                    };
                     _tiles[i, j] = tile;
                     gridPanel.Controls.Add(tile);
                     gridPanel.SetRow(tile, i);
@@ -114,9 +120,89 @@ namespace NonoGramAI
             mainPanel.Show();
         }
 
-        private void UpdateDisplay()
+        private void CheckScore()
         {
+            var score = 0;
+            //checks columns
+            for (var i = 0; i < _size; i++)
+            {
+                var column = new LinkedList<Tile>();
+                for(var j = 0; j <_size; j++)
+                    column.AddLast((Tile) gridPanel.GetControlFromPosition(i,j));
 
+                var consecutiveList = new List<int>();
+                var current = column.First;
+                var count = 0;
+                while (current != null)
+                {
+                    if (current.Value.State)
+                        count++;
+                    else if(count > 0)
+                    {
+                        consecutiveList.Add(count);
+                        count = 0;
+                    }
+
+                    current = current.Next;
+                }
+                if(count > 0) consecutiveList.Add(count);
+
+                var hintList = _topHints[i].Hints;
+                var tempScore = 0;
+                for (var x = 0; x < hintList.Count; x++)
+                {
+                    if (x >= consecutiveList.Count || 
+                        consecutiveList.Count > hintList.Count) break;
+                    if (consecutiveList[x] == hintList[x]) tempScore++;
+                }
+                topListPanel.GetControlFromPosition(i, 0)
+                        .Enabled = tempScore != hintList.Count;
+                score += tempScore;
+            }
+
+            //checks rows
+            for (var i = 0; i < _size; i++)
+            {
+                var row = new LinkedList<Tile>();
+                for(var j = 0; j <_size; j++)
+                    row.AddLast((Tile) gridPanel.GetControlFromPosition(j,i));
+
+                var consecutiveList = new List<int>();
+                var current = row.First;
+                var count = 0;
+                while (current != null)
+                {
+                    if (current.Value.State)
+                        count++;
+                    else if(count > 0)
+                    {
+                        consecutiveList.Add(count);
+                        count = 0;
+                    }
+
+                    current = current.Next;
+                }
+                if(count > 0) consecutiveList.Add(count);
+
+                var hintList = _sideHints[i].Hints;
+                var tempScore = 0;
+                for (var x = 0; x < hintList.Count; x++)
+                {
+                    if (x >= consecutiveList.Count || 
+                        consecutiveList.Count > hintList.Count) break;
+                    if (consecutiveList[x] == hintList[x]) tempScore++;
+                }
+                sideListPanel.GetControlFromPosition(0,i)
+                        .Enabled = tempScore != hintList.Count;
+                score += tempScore;
+            }
+
+            scoreLabel.Text = "Score: " + score;
+        }
+
+        private void runAIButton_Click(object sender, EventArgs e)
+        {
+            CheckScore();
         }
     }
 }
