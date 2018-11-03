@@ -19,6 +19,16 @@ namespace NonoGramAI.Entities
             Size = size;
         }
 
+        public int Shaded()
+        {
+            var score = 0;
+            foreach (var h1 in TopHints)
+                foreach (var h2 in h1.Hints)
+                    score += h2;
+
+            return score;
+        }
+
         public override int GetHashCode()
         {
             var id = Tiles.Cast<Tile>()

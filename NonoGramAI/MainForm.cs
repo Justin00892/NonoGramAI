@@ -42,7 +42,7 @@ namespace NonoGramAI
 
                     topHints.Add(new Hint(hintList,true)
                     {
-                        Width = 30, Height = 100, 
+                        Width = 30, Height = 200, 
                         TextAlign = ContentAlignment.BottomCenter
                     });
                     hintString = reader.ReadLine();
@@ -93,26 +93,25 @@ namespace NonoGramAI
                 }
             }
 
-            //sets up top hints
+            
             topListPanel.ColumnCount = size;
+            sideListPanel.RowCount = size;
 
             for (var i = 0; i < topHints.Count; i++)
             {
+                //sets up top hints
                 var hint = topHints[i];
                 topListPanel.Controls.Add(hint);
                 topListPanel.SetColumn(hint, i);
-            }
 
-            //sets up side hints
-            sideListPanel.RowCount = size;
-
-            for (var j = 0; j < size; j++)
-            {
-                var hint = sideHints[j];
+                //sets up side hints
+                hint = sideHints[i];
                 sideListPanel.Controls.Add(hint);
-                sideListPanel.SetRow(hint, j);
+                sideListPanel.SetRow(hint, i);
             }
+
             _grid = new Grid(size,tiles,topHints,sideHints);
+
             TopMost = true;
             mainPanel.Show();
         }

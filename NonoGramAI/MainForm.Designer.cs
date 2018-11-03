@@ -35,9 +35,9 @@ namespace NonoGramAI
             this.sideListPanel = new System.Windows.Forms.TableLayoutPanel();
             this.topListPanel = new System.Windows.Forms.TableLayoutPanel();
             this.buttonPanel = new System.Windows.Forms.Panel();
+            this.scoreLabel = new System.Windows.Forms.Label();
             this.runAIButton = new System.Windows.Forms.Button();
             this.openFileDialog = new System.Windows.Forms.OpenFileDialog();
-            this.scoreLabel = new System.Windows.Forms.Label();
             this.mainPanel.SuspendLayout();
             this.buttonPanel.SuspendLayout();
             this.SuspendLayout();
@@ -96,13 +96,13 @@ namespace NonoGramAI
             this.topListPanel.AutoSize = true;
             this.topListPanel.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.topListPanel.ColumnCount = 1;
-            this.topListPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.topListPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             this.topListPanel.GrowStyle = System.Windows.Forms.TableLayoutPanelGrowStyle.AddColumns;
             this.topListPanel.Location = new System.Drawing.Point(100, 0);
             this.topListPanel.Margin = new System.Windows.Forms.Padding(0);
             this.topListPanel.Name = "topListPanel";
             this.topListPanel.RowCount = 1;
-            this.topListPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.topListPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.topListPanel.Size = new System.Drawing.Size(0, 0);
             this.topListPanel.TabIndex = 1;
             // 
@@ -116,6 +116,15 @@ namespace NonoGramAI
             this.buttonPanel.Size = new System.Drawing.Size(100, 100);
             this.buttonPanel.TabIndex = 4;
             // 
+            // scoreLabel
+            // 
+            this.scoreLabel.AutoSize = true;
+            this.scoreLabel.Location = new System.Drawing.Point(13, 13);
+            this.scoreLabel.Name = "scoreLabel";
+            this.scoreLabel.Size = new System.Drawing.Size(62, 17);
+            this.scoreLabel.TabIndex = 1;
+            this.scoreLabel.Text = "Score: X";
+            // 
             // runAIButton
             // 
             this.runAIButton.Location = new System.Drawing.Point(0, 75);
@@ -126,15 +135,6 @@ namespace NonoGramAI
             this.runAIButton.Text = "Run AI";
             this.runAIButton.UseVisualStyleBackColor = true;
             this.runAIButton.Click += new System.EventHandler(this.runAIButton_Click);
-            // 
-            // scoreLabel
-            // 
-            this.scoreLabel.AutoSize = true;
-            this.scoreLabel.Location = new System.Drawing.Point(13, 13);
-            this.scoreLabel.Name = "scoreLabel";
-            this.scoreLabel.Size = new System.Drawing.Size(62, 17);
-            this.scoreLabel.TabIndex = 1;
-            this.scoreLabel.Text = "Score: X";
             // 
             // MainForm
             // 

@@ -10,8 +10,15 @@ namespace NonoGramAI.Entities
         public static Grid Random(Grid grid)
         {
             var rnd = new Random();
-            foreach (var tile in grid.Tiles)
-                tile.State = rnd.NextDouble() >= .5;
+            for (var x = 0; x < grid.Shaded();x++)
+            {
+                var i = rnd.Next(grid.Size);
+                var j = rnd.Next(grid.Size);
+                if (grid.Tiles[i, j].State)
+                    x--;
+                else
+                    grid.Tiles[i, j].State = true;
+            }
 
             return grid;
         }
