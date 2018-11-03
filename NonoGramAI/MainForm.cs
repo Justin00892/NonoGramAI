@@ -113,7 +113,7 @@ namespace NonoGramAI
                 sideListPanel.SetRow(hint, j);
             }
             _grid = new Grid(size,tiles,topHints,sideHints);
-
+            TopMost = true;
             mainPanel.Show();
         }
 
