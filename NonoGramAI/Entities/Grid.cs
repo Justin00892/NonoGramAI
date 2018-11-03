@@ -29,6 +29,15 @@ namespace NonoGramAI.Entities
             return score;
         }
 
+        public List<Tile> GetTiles()
+        {
+            var list = new List<Tile>();
+            for (var i = 0; i < Size; i++)
+                for(var j = 0; j < Size; j++)
+                    list.Add(Tiles[i,j]);
+            return list;
+        }
+
         public override int GetHashCode()
         {
             var id = Tiles.Cast<Tile>()

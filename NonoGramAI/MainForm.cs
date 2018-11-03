@@ -80,16 +80,17 @@ namespace NonoGramAI
             {
                 for (var j = 0; j < size; j++)
                 {
-                    var tile = new Tile(i, j);
-                    tile.Click += (sender, args) =>
+                    tiles[i, j] = new Tile(i, j);
+                    var x = i;
+                    var y = j;
+                    tiles[i, j].Click += (sender, args) =>
                     {
-                        tile.State = !tile.State;
-                        UpdateScore();
+                        tiles[x, y].State = !tiles[x, y].State;
+                        UpdateDisplay();
                     };
-                    tiles[i, j] = tile;
-                    gridPanel.Controls.Add(tile);
-                    gridPanel.SetRow(tile, i);
-                    gridPanel.SetColumn(tile, j);
+                    gridPanel.Controls.Add(tiles[i, j]);
+                    gridPanel.SetRow(tiles[i, j], i);
+                    gridPanel.SetColumn(tiles[i, j], j);
                 }
             }
 
@@ -112,43 +113,23 @@ namespace NonoGramAI
 
             _grid = new Grid(size,tiles,topHints,sideHints);
 
-            TopMost = true;
+            //TopMost = true;
             mainPanel.Show();
         }
 
-        private void UpdateScore()
+        private void UpdateDisplay()
         {
-            var score = 0;
-            for (var i = 0; i < _grid.Size; i++)
-            {
-                var column = new LinkedList<Tile>();
-                var row = new LinkedList<Tile>();
-                for (var j = 0; j < _grid.Size; j++)
-                {
-                    column.AddLast((Tile) gridPanel.GetControlFromPosition(i,j));
-                    row.AddLast((Tile) gridPanel.GetControlFromPosition(j,i));
-                }
-                    
-                //checks columns
-                var hintList = _grid.TopHints[i].Hints;
-                var tempScore = Algorithm.CheckScore(column, hintList);
-                topListPanel.GetControlFromPosition(i,0)
-                        .Enabled = tempScore-1 != hintList.Count;                   
-                score += tempScore;
+            foreach (var obj in gridPanel.Controls)
+                if (obj is Tile tile)
+                    tile.State = _grid.GetTiles()
+                        .First(t => t.X == tile.X && t.Y == tile.Y).State;
 
-                //checks rows
-                hintList = _grid.SideHints[i].Hints;
-                tempScore = Algorithm.CheckScore(row, hintList);
-                sideListPanel.GetControlFromPosition(0,i)
-                        .Enabled = tempScore-1 != hintList.Count;                    
-                score += tempScore;
-            }
-
-            scoreLabel.Text = "Score: " + score;
+            scoreLabel.Text = "Score: " + _grid.Score;
         }
 
         private async void runAIButton_Click(object sender, EventArgs e)
         {
+            runAIButton.Enabled = false;
             switch (_settings.Algorithm)
             {
                 case 0: _grid = await Task<Grid>.Factory.StartNew(
@@ -162,7 +143,8 @@ namespace NonoGramAI
                         () => Algorithm.Random(_grid));
                     break;
             }
-            UpdateScore();
+            UpdateDisplay();
+            runAIButton.Enabled = true;
         }
     }
 }

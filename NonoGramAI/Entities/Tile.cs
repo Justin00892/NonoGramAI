@@ -30,7 +30,6 @@ namespace NonoGramAI.Entities
             Padding = new Padding(0);
             BackColor = Color.White;
             BorderStyle = BorderStyle.FixedSingle;
-
         }
     }
 }

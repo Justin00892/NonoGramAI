@@ -9,18 +9,27 @@ namespace NonoGramAI.Entities
     {
         public static Grid Random(Grid grid)
         {
+            var tiles = new Tile[grid.Size, grid.Size];
+            for (var i = 0; i < grid.Size; i++)
+            {
+                for (var j = 0; j < grid.Size; j++)
+                {
+                    var tile = new Tile(i,j);
+                    tiles[i, j] = tile;
+                }                  
+            }    
             var rnd = new Random();
             for (var x = 0; x < grid.Shaded();x++)
             {
                 var i = rnd.Next(grid.Size);
                 var j = rnd.Next(grid.Size);
-                if (grid.Tiles[i, j].State)
+                if (tiles[i, j].State)
                     x--;
                 else
-                    grid.Tiles[i, j].State = true;
+                    tiles[i, j].State = true;
             }
 
-            return grid;
+            return new Grid(grid.Size,tiles,grid.TopHints,grid.SideHints);
         }
 
         public static Grid Genetic(Grid grid)
