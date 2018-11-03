@@ -89,6 +89,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="test.txt" />
+    <Content Include="test2.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
