@@ -9,7 +9,7 @@ namespace NonoGramAI.Entities
         public List<Hint> TopHints { get; }
         public List<Hint> SideHints { get; }
         public int Size { get; }
-        public int Score => Algorithm.CheckWholeScore(Tiles, TopHints, SideHints);
+        public int Score => Algorithm.CheckWholeScore(this);
 
         public Grid(int size, Tile[,] tiles, List<Hint> top, List<Hint> side)
         {

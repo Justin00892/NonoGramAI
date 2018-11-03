@@ -28,6 +28,9 @@ namespace NonoGramAI.Entities
                 population.Add(newGrid,newGrid.Score);
             }
 
+            //crossover/mutation stuff here
+
+
             return population.OrderByDescending(g => g.Value).First().Key;
         }
 
@@ -61,27 +64,28 @@ namespace NonoGramAI.Entities
             return tempScore;
         }
 
-        public static int CheckWholeScore(Tile[,] tiles, List<Hint> topHints, List<Hint> sideHints)
+        public static int CheckWholeScore(Grid grid)
         {
+            
             var score = 0;
-            var size = topHints.Count;
+            var size = grid.TopHints.Count;
             for (var i = 0; i < size; i++)
             {
                 var column = new LinkedList<Tile>();
                 var row = new LinkedList<Tile>();
                 for (var j = 0; j < size; j++)
                 {
-                    column.AddLast(tiles[i,j]);
-                    row.AddLast(tiles[j,i]);
+                    column.AddLast(grid.Tiles[i,j]);
+                    row.AddLast(grid.Tiles[j,i]);
                 }
                     
                 //checks columns
-                var hintList = topHints[i].Hints;
+                var hintList = grid.TopHints[i].Hints;
                 var tempScore = CheckScore(column, hintList);            
                 score += tempScore;
 
                 //checks rows
-                hintList = sideHints[i].Hints;
+                hintList = grid.SideHints[i].Hints;
                 tempScore = CheckScore(row, hintList);                   
                 score += tempScore;
             }
