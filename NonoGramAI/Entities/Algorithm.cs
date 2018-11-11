@@ -123,6 +123,48 @@ namespace NonoGramAI.Entities
             
         }
 
+        public Grid Mutator(Grid original)
+        {
+            var tiles = Grid.GenerateNewTiles(original.Size);
+            var mutation = new Grid(original.Size, tiles, original.TopHints, original.SideHints);
+            var method = rnd.Next(4);
+
+            for (var row = 0; row < original.Size; row++)
+            {
+                switch (method)
+                {
+                    case 0:
+                        //Scoot: Go through a row using the hint values, and verify that the shaded squares match.
+                        //       if there are too many shaded squares in a row, scoot them over to get the correct distribution.
+
+                        break;
+                    case 1:
+                        //Column Too-Many: Look for a column with too many shaded values in it, select a shaded square. 
+                        //       Within that shaded square's row, swap the shaded square with a non-shaded square.
+
+                        //because we are solving a square, if we had rectangles this would need to be random by #columns.
+                        var col = row;
+                        //if(original.Shaded())
+
+                        break;
+                    case 2:
+                        //Column Too-Few: Look for a column with too few shaded values in it, select a non-shaded square. 
+                        //       Within that non-shaded square's row, swap the non-shaded square with a shaded square.
+
+                        break;
+                    case 3:
+                        //Randomize Row
+                        RandomizeRow(grid, row);
+                        break;
+                }
+                for (var col = 0; col < original.Size; col++)
+                {
+                    tiles[row, col] = original.Tiles[row, col];
+                }
+            }
+            return mutation;
+        }
+
         public static int CheckScore(Grid grid, int position, bool isRow)
         {
             var consecutiveList = new List<int>();
@@ -169,8 +211,7 @@ namespace NonoGramAI.Entities
 
             return tempScore;
         }
-
-
+        
         public static int CheckWholeScore(Grid grid)
         {
             var score = 0;
