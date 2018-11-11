@@ -64,11 +64,7 @@ namespace NonoGramAI.Entities
                     child = Crossover(alpha.Key, mate.Key);
                 while (population.ContainsKey(child));
                 population.Add(child, child.Score);
-                Mutate(child);
             }
-
-            return population.OrderByDescending(g => g.Value).First().Key;
-        }
 
         private void NaturalSelection()
         {
@@ -79,6 +75,7 @@ namespace NonoGramAI.Entities
             foreach (var casuality in casualities)
                 population.Remove(casuality.Key);
         }
+
 
         private Grid Crossover (Grid alpha, Grid mate)
         {

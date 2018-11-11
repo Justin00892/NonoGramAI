@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -19,7 +18,41 @@ namespace NonoGramAI
         public MainForm()
         {
             InitializeComponent();
+        }
 
+        private void UpdateDisplay()
+        {
+            foreach (var obj in gridPanel.Controls)
+                if (obj is Tile tile)
+                    tile.State = _grid.GetTiles()
+                        .First(t => t.X == tile.X && t.Y == tile.Y).State;
+
+            scoreLabel.Text = "Score: " + _grid.Score;
+        }
+
+        private async void runAIButton_Click(object sender, EventArgs e)
+        {
+            runAIButton.Enabled = false;
+            switch (_settings.Algorithm)
+            {
+                case 0: _grid = await Task<Grid>.Factory.StartNew(
+                        () => Algorithm.Random(_grid));
+                    break;
+                case 1:
+                    _grid = await Task<Grid>.Factory.StartNew(
+                        () => Algorithm.Genetic(_grid));
+                    break;
+                default: _grid = await Task<Grid>.Factory.StartNew(
+                        () => Algorithm.Random(_grid));
+                    break;
+            }
+            UpdateDisplay();
+            runAIButton.Enabled = true;
+        }
+
+        private void chooseFileButton_Click(object sender, EventArgs e)
+        {
+            chooseFileButton.Enabled = false;
             var dr = openFileDialog.ShowDialog();
             if(dr != DialogResult.OK)
             {
@@ -33,7 +66,8 @@ namespace NonoGramAI
                 //skips top line
                 reader.ReadLine();
                 var hintString = reader.ReadLine();
-                
+
+                var maxSize = 1;
                 while (hintString != "Side Hints" && hintString != null)
                 {
                     var hintStringList = hintString.Split(',').ToList();
@@ -41,11 +75,11 @@ namespace NonoGramAI
                     foreach (var str in hintStringList)
                         hintList.Add(int.Parse(str));
 
-                    topHints.Add(new Hint(hintList,true)
-                    {
-                        Width = 30, Height = 200, 
-                        TextAlign = ContentAlignment.BottomCenter
-                    });
+                    if (hintList.Count > maxSize)
+                        maxSize = hintList.Count;
+
+                    var hint = new Hint(hintList, true);
+                    topHints.Add(hint);
                     hintString = reader.ReadLine();
                 }
 
@@ -57,11 +91,8 @@ namespace NonoGramAI
                     foreach (var str in hintStringList)
                         hintList.Add(int.Parse(str));
 
-                    sideHints.Add(new Hint(hintList,false)
-                    {
-                        Width = 100, Height = 30, 
-                        TextAlign = ContentAlignment.MiddleRight
-                    });
+                    var hint = new Hint(hintList, false);
+                    sideHints.Add(hint);
                     hintString = reader.ReadLine();
                 }
             }
@@ -84,7 +115,7 @@ namespace NonoGramAI
                     tiles[i, j] = new Tile(i, j);
                     var x = i;
                     var y = j;
-                    tiles[i, j].Click += (sender, args) =>
+                    tiles[i, j].Click += (sender1, args) =>
                     {
                         tiles[x, y].State = !tiles[x, y].State;
                         UpdateDisplay();
@@ -115,6 +146,7 @@ namespace NonoGramAI
             _grid = new Grid(size,tiles,topHints,sideHints);
 
             //TopMost = true;
+
             mainPanel.Show();
         }
 
@@ -147,6 +179,9 @@ namespace NonoGramAI
             }
             UpdateDisplay();
             runAIButton.Enabled = true;
+
+            chooseFileButton.Dispose();
+            gridPanel.Show();
         }
     }
 }
