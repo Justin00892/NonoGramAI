@@ -18,14 +18,28 @@ namespace NonoGramAI.Entities
             Padding = new Padding(0);
             BackColor = Color.White;
             BorderStyle = BorderStyle.FixedSingle;
+            
+            if (top)
+            {
+                Height = 300;
+                Width = 30;
+                TextAlign = ContentAlignment.BottomCenter;
+            }
+            else
+            {
+                Width = 300;
+                Height = 30;
+                TextAlign = ContentAlignment.MiddleRight;
+            }
 
             foreach (var hint in Hints)
             {
                 if (top)
-                    Text += "\n" + hint;
+                    Text += " " + hint;
                 else
                     Text += " " + hint;
             }
+
         }
     }
 }

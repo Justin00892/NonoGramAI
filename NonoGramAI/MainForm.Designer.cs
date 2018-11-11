@@ -38,6 +38,7 @@ namespace NonoGramAI
             this.scoreLabel = new System.Windows.Forms.Label();
             this.runAIButton = new System.Windows.Forms.Button();
             this.openFileDialog = new System.Windows.Forms.OpenFileDialog();
+            this.chooseFileButton = new System.Windows.Forms.Button();
             this.mainPanel.SuspendLayout();
             this.buttonPanel.SuspendLayout();
             this.SuspendLayout();
@@ -61,7 +62,6 @@ namespace NonoGramAI
             this.mainPanel.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.mainPanel.Size = new System.Drawing.Size(100, 100);
             this.mainPanel.TabIndex = 0;
-            this.mainPanel.Visible = false;
             // 
             // gridPanel
             // 
@@ -76,6 +76,7 @@ namespace NonoGramAI
             this.gridPanel.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.gridPanel.Size = new System.Drawing.Size(0, 0);
             this.gridPanel.TabIndex = 3;
+            this.gridPanel.Visible = false;
             // 
             // sideListPanel
             // 
@@ -108,6 +109,7 @@ namespace NonoGramAI
             // 
             // buttonPanel
             // 
+            this.buttonPanel.Controls.Add(this.chooseFileButton);
             this.buttonPanel.Controls.Add(this.scoreLabel);
             this.buttonPanel.Controls.Add(this.runAIButton);
             this.buttonPanel.Location = new System.Drawing.Point(0, 0);
@@ -135,6 +137,16 @@ namespace NonoGramAI
             this.runAIButton.Text = "Run AI";
             this.runAIButton.UseVisualStyleBackColor = true;
             this.runAIButton.Click += new System.EventHandler(this.runAIButton_Click);
+            // 
+            // chooseFileButton
+            // 
+            this.chooseFileButton.Location = new System.Drawing.Point(0, 76);
+            this.chooseFileButton.Name = "chooseFileButton";
+            this.chooseFileButton.Size = new System.Drawing.Size(100, 23);
+            this.chooseFileButton.TabIndex = 1;
+            this.chooseFileButton.Text = "Choose File";
+            this.chooseFileButton.UseVisualStyleBackColor = true;
+            this.chooseFileButton.Click += new System.EventHandler(this.chooseFileButton_Click);
             // 
             // MainForm
             // 
@@ -165,6 +177,7 @@ namespace NonoGramAI
         private Panel buttonPanel;
         private Button runAIButton;
         private Label scoreLabel;
+        private Button chooseFileButton;
     }
 }
 
