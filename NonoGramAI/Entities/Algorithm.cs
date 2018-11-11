@@ -65,6 +65,7 @@ namespace NonoGramAI.Entities
                 while (population.ContainsKey(child));
                 population.Add(child, child.Score);
             }
+        }
 
         private void NaturalSelection()
         {
