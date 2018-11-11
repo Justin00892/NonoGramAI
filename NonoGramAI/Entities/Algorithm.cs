@@ -18,16 +18,17 @@ namespace NonoGramAI.Entities
         }
         public Grid Random()
         {
-            grid.ClearTiles();
+            var tiles = Grid.GenerateNewTiles(grid.Size);
+            grid.Tiles = tiles;
             for (var row = 0; row < grid.Size; row++)
             {
-                RandomizeRow(row, grid);
+                RandomizeRow(row);
             }
 
             return grid;
         }
 
-        private void RandomizeRow(int row, Grid grid)
+        private void RandomizeRow(int row)
         {
             for (var x = 0; x < grid.Shaded(row); x++)
             {
@@ -39,23 +40,23 @@ namespace NonoGramAI.Entities
             }
         }
 
-        //public static Grid Genetic(Grid grid)
-        //{
-        //    var population = new Dictionary<Grid,int>(Settings.Default.Population);
-        //    while (population.Count < Settings.Default.Population)
-        //    {
-        //        Grid newGrid;
-        //        do
-        //            newGrid = Random(grid);
-        //        while (population.ContainsKey(newGrid));
-        //        population.Add(newGrid,newGrid.Score);
-        //    }
+        public Grid Genetic()
+        {
+            var population = new Dictionary<Grid, int>(Settings.Default.Population);
+            while (population.Count < Settings.Default.Population)
+            {
+                Grid newGrid;
+                do
+                    newGrid = Random();
+                while (population.ContainsKey(newGrid));
+                population.Add(newGrid, newGrid.Score);
+            }
 
-        //    //crossover/mutation stuff here
+            //crossover/mutation stuff here
 
 
-        //    return population.OrderByDescending(g => g.Value).First().Key;
-        //}
+            return population.OrderByDescending(g => g.Value).First().Key;
+        }
 
         public static int CheckScore(LinkedList<Tile> entries, List<int> hints)
         {

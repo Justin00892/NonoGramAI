@@ -5,7 +5,7 @@ namespace NonoGramAI.Entities
 {
     public class Grid
     {
-        public Tile[,] Tiles { get; }
+        public Tile[,] Tiles { get; set; }
         public List<Hint> TopHints { get; }
         public List<Hint> SideHints { get; }
         public int Size { get; }
@@ -27,6 +27,20 @@ namespace NonoGramAI.Entities
                     score += h2;
 
             return score;
+        }
+
+        public static Tile[,] GenerateNewTiles(int Size)
+        {
+            var tiles = new Tile[Size, Size];
+            for (var i = 0; i < Size; i++)
+            {
+                for (var j = 0; j < Size; j++)
+                {
+                    var tile = new Tile(i, j);
+                    tiles[i, j] = tile;
+                }
+            }
+            return tiles;
         }
 
         public void ClearTiles()

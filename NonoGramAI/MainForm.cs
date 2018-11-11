@@ -13,6 +13,7 @@ namespace NonoGramAI
     public partial class MainForm : Form
     {
         private Grid _grid;
+        private Algorithm _algorithm;
         private Settings _settings = Settings.Default;
 
         public MainForm()
@@ -130,18 +131,18 @@ namespace NonoGramAI
         private async void runAIButton_Click(object sender, EventArgs e)
         {
             runAIButton.Enabled = false;
-            var Algorithm = new Algorithm(_grid);
+            _algorithm = new Algorithm(_grid);
             switch (_settings.Algorithm)
             {
                 case 0: _grid = await Task<Grid>.Factory.StartNew(
-                        () => Algorithm.Random());
+                        () => _algorithm.Random());
                     break;
-                //case 1:
-                //    _grid = await Task<Grid>.Factory.StartNew(
-                //        () => Algorithm.Genetic(_grid));
-                //    break;
+                case 1:
+                    _grid = await Task<Grid>.Factory.StartNew(
+                        () => _algorithm.Genetic());
+                    break;
                 default: _grid = await Task<Grid>.Factory.StartNew(
-                        () => Algorithm.Random());
+                        () => _algorithm.Random());
                     break;
             }
             UpdateDisplay();
