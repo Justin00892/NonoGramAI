@@ -12,6 +12,7 @@ namespace NonoGramAI
     public partial class MainForm : Form
     {
         private Grid _grid;
+        private Algorithm _algorithm;
         private Settings _settings = Settings.Default;
 
         public MainForm()
@@ -145,6 +146,40 @@ namespace NonoGramAI
             _grid = new Grid(size,tiles,topHints,sideHints);
 
             //TopMost = true;
+
+            mainPanel.Show();
+        }
+
+        private void UpdateDisplay()
+        {
+            foreach (var obj in gridPanel.Controls)
+                if (obj is Tile tile)
+                    tile.State = _grid.GetTiles()
+                        .First(t => t.X == tile.X && t.Y == tile.Y).State;
+
+            scoreLabel.Text = "Score: " + _grid.Score;
+        }
+
+        private async void runAIButton_Click(object sender, EventArgs e)
+        {
+            runAIButton.Enabled = false;
+            _algorithm = new Algorithm(_grid);
+            switch (_settings.Algorithm)
+            {
+                case 0: _grid = await Task<Grid>.Factory.StartNew(
+                        () => _algorithm.Random());
+                    break;
+                case 1:
+                    _grid = await Task<Grid>.Factory.StartNew(
+                        () => _algorithm.Genetic());
+                    break;
+                default: _grid = await Task<Grid>.Factory.StartNew(
+                        () => _algorithm.Random());
+                    break;
+            }
+            UpdateDisplay();
+            runAIButton.Enabled = true;
+
             chooseFileButton.Dispose();
             gridPanel.Show();
         }
