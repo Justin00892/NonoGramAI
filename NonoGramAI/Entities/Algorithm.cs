@@ -9,6 +9,7 @@ namespace NonoGramAI.Entities
     {
         private Random rnd;
         private Grid grid;
+        private Dictionary<Grid, int> population;
 
         public Algorithm(Grid grid)
         {
@@ -42,7 +43,7 @@ namespace NonoGramAI.Entities
 
         public Grid Genetic()
         {
-            var population = new Dictionary<Grid, int>(Settings.Default.Population);
+            population = new Dictionary<Grid, int>(Settings.Default.Population);
             while (population.Count < Settings.Default.Population)
             {
                 Grid newGrid;
@@ -51,7 +52,7 @@ namespace NonoGramAI.Entities
                 while (population.ContainsKey(newGrid));
                 population.Add(newGrid, newGrid.Score);
             }
-            NaturalSelection(population);
+            NaturalSelection();
             var alpha = population.OrderByDescending(g => g.Value).First();
             Grid child;
             population.Remove(alpha.Key);
@@ -59,17 +60,17 @@ namespace NonoGramAI.Entities
             while (population.Count < Settings.Default.Population)
             {
                 mate = population.ElementAt(rnd.Next(population.Count));
-                child = Crossover(alpha.Key, mate.Key);
                 do
-                    child = Random();
+                    child = Crossover(alpha.Key, mate.Key);
                 while (population.ContainsKey(child));
                 population.Add(child, child.Score);
+                Mutate(child);
             }
 
             return population.OrderByDescending(g => g.Value).First().Key;
         }
 
-        private void NaturalSelection(Dictionary<Grid, int> population)
+        private void NaturalSelection()
         {
             var casualities = (population.OrderByDescending(g => g.Value)
                                     .Skip(Settings.Default.Population / 2)
@@ -113,7 +114,14 @@ namespace NonoGramAI.Entities
                     tiles[row, col] = parent.Tiles[row, col];
                 }
             }
-            return child;
+            return child; 
+        }
+
+        private void Mutate(Grid child)
+        {
+            var tiles = Grid.GenerateNewTiles(child.Size);
+            var mutation = new Grid(child.Size, tiles, child.TopHints, child.SideHints);
+            var method = rnd.Next(3);
             
         }
 
