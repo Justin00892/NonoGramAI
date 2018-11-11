@@ -20,36 +20,6 @@ namespace NonoGramAI
             InitializeComponent();
         }
 
-        private void UpdateDisplay()
-        {
-            foreach (var obj in gridPanel.Controls)
-                if (obj is Tile tile)
-                    tile.State = _grid.GetTiles()
-                        .First(t => t.X == tile.X && t.Y == tile.Y).State;
-
-            scoreLabel.Text = "Score: " + _grid.Score;
-        }
-
-        private async void runAIButton_Click(object sender, EventArgs e)
-        {
-            runAIButton.Enabled = false;
-            switch (_settings.Algorithm)
-            {
-                case 0: _grid = await Task<Grid>.Factory.StartNew(
-                        () => Algorithm.Random(_grid));
-                    break;
-                case 1:
-                    _grid = await Task<Grid>.Factory.StartNew(
-                        () => Algorithm.Genetic(_grid));
-                    break;
-                default: _grid = await Task<Grid>.Factory.StartNew(
-                        () => Algorithm.Random(_grid));
-                    break;
-            }
-            UpdateDisplay();
-            runAIButton.Enabled = true;
-        }
-
         private void chooseFileButton_Click(object sender, EventArgs e)
         {
             chooseFileButton.Enabled = false;
@@ -147,7 +117,8 @@ namespace NonoGramAI
 
             //TopMost = true;
 
-            mainPanel.Show();
+            chooseFileButton.Dispose();
+            gridPanel.Show();
         }
 
         private void UpdateDisplay()
@@ -180,8 +151,6 @@ namespace NonoGramAI
             UpdateDisplay();
             runAIButton.Enabled = true;
 
-            chooseFileButton.Dispose();
-            gridPanel.Show();
         }
     }
 }

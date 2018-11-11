@@ -65,7 +65,8 @@ namespace NonoGramAI.Entities
                 while (population.ContainsKey(child));
                 population.Add(child, child.Score);
             }
-
+            return population.OrderByDescending(g => g.Value).FirstOrDefault().Key;
+        }
         private void NaturalSelection()
         {
             var casualities = (population.OrderByDescending(g => g.Value)
