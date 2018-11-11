@@ -19,14 +19,22 @@ namespace NonoGramAI.Entities
             Size = size;
         }
 
-        public int Shaded()
+        public int Shaded(int row)
         {
             var score = 0;
-            foreach (var h1 in TopHints)
-                foreach (var h2 in h1.Hints)
+            var hints = SideHints.Skip(row).FirstOrDefault();
+                foreach (var h2 in hints.Hints)
                     score += h2;
 
             return score;
+        }
+
+        public void ClearTiles()
+        {
+            foreach (var tile in Tiles)
+            {
+                tile.State = false;
+            }
         }
 
         public List<Tile> GetTiles()

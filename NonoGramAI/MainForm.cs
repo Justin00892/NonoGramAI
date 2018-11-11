@@ -130,17 +130,18 @@ namespace NonoGramAI
         private async void runAIButton_Click(object sender, EventArgs e)
         {
             runAIButton.Enabled = false;
+            var Algorithm = new Algorithm(_grid);
             switch (_settings.Algorithm)
             {
                 case 0: _grid = await Task<Grid>.Factory.StartNew(
-                        () => Algorithm.Random(_grid));
+                        () => Algorithm.Random());
                     break;
-                case 1:
-                    _grid = await Task<Grid>.Factory.StartNew(
-                        () => Algorithm.Genetic(_grid));
-                    break;
+                //case 1:
+                //    _grid = await Task<Grid>.Factory.StartNew(
+                //        () => Algorithm.Genetic(_grid));
+                //    break;
                 default: _grid = await Task<Grid>.Factory.StartNew(
-                        () => Algorithm.Random(_grid));
+                        () => Algorithm.Random());
                     break;
             }
             UpdateDisplay();

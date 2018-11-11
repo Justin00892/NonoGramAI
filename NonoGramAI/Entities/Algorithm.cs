@@ -7,48 +7,55 @@ namespace NonoGramAI.Entities
 {
     public class Algorithm
     {
-        public static Grid Random(Grid grid)
+        private Random rnd;
+        private Grid grid;
+
+        public Algorithm(Grid grid)
         {
-            var tiles = new Tile[grid.Size, grid.Size];
-            for (var i = 0; i < grid.Size; i++)
+            rnd = new Random();
+            this.grid = grid;
+
+        }
+        public Grid Random()
+        {
+            grid.ClearTiles();
+            for (var row = 0; row < grid.Size; row++)
             {
-                for (var j = 0; j < grid.Size; j++)
-                {
-                    var tile = new Tile(i,j);
-                    tiles[i, j] = tile;
-                }                  
-            }    
-            var rnd = new Random();
-            for (var x = 0; x < grid.Shaded();x++)
+                RandomizeRow(row, grid);
+            }
+
+            return grid;
+        }
+
+        private void RandomizeRow(int row, Grid grid)
+        {
+            for (var x = 0; x < grid.Shaded(row); x++)
             {
-                var i = rnd.Next(grid.Size);
-                var j = rnd.Next(grid.Size);
-                if (tiles[i, j].State)
+                var col = rnd.Next(grid.Size);
+                if (grid.Tiles[row, col].State)
                     x--;
                 else
-                    tiles[i, j].State = true;
+                    grid.Tiles[row, col].State = true;
             }
-
-            return new Grid(grid.Size,tiles,grid.TopHints,grid.SideHints);
         }
 
-        public static Grid Genetic(Grid grid)
-        {
-            var population = new Dictionary<Grid,int>(Settings.Default.Population);
-            while (population.Count < Settings.Default.Population)
-            {
-                Grid newGrid;
-                do
-                    newGrid = Random(grid);
-                while (population.ContainsKey(newGrid));
-                population.Add(newGrid,newGrid.Score);
-            }
+        //public static Grid Genetic(Grid grid)
+        //{
+        //    var population = new Dictionary<Grid,int>(Settings.Default.Population);
+        //    while (population.Count < Settings.Default.Population)
+        //    {
+        //        Grid newGrid;
+        //        do
+        //            newGrid = Random(grid);
+        //        while (population.ContainsKey(newGrid));
+        //        population.Add(newGrid,newGrid.Score);
+        //    }
 
-            //crossover/mutation stuff here
+        //    //crossover/mutation stuff here
 
 
-            return population.OrderByDescending(g => g.Value).First().Key;
-        }
+        //    return population.OrderByDescending(g => g.Value).First().Key;
+        //}
 
         public static int CheckScore(LinkedList<Tile> entries, List<int> hints)
         {
