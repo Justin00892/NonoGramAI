@@ -44,13 +44,13 @@ namespace NonoGramAI.Entities
                 population.Add(newGrid,newGrid.Score);
             }
 
-            //crossover/mutation stuff here
+            //TODO crossover/mutator stuff here
 
 
             return population.OrderByDescending(g => g.Value).First().Key;
         }
 
-        public static int CheckScore(LinkedList<Tile> entries, List<int> hints)
+        private static int CheckScore(LinkedList<Tile> entries, List<int> hints)
         {
             var consecutiveList = new List<int>();
             var current = entries.First;
