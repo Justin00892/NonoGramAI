@@ -167,38 +167,8 @@ namespace NonoGramAI.Entities
 
         public static int CheckScore(Grid grid, int position, bool isRow)
         {
-            var consecutiveList = new List<int>();
-            var count = 0;
-            List<int> hintList; 
-            if (isRow)
-            {
-                hintList = grid.SideHints[position].Hints;
-                for (int col = 0; col < grid.Size; col++)
-                {
-                    if (grid.Tiles[position, col].State)
-                        count++;
-                    else if (count > 0)
-                    {
-                        consecutiveList.Add(count);
-                        count = 0;
-                    }
-                }
-            }
-            else
-            {
-                hintList = grid.TopHints[position].Hints;
-                for (int row = 0; row < grid.Size; row++)
-                {
-                    if (grid.Tiles[row, position].State)
-                        count++;
-                    else if (count > 0)
-                    {
-                        consecutiveList.Add(count);
-                        count = 0;
-                    }
-                }
-            }
-            if (count > 0) consecutiveList.Add(count);
+            var consecutiveList = grid.GetConsecutiveList(position, isRow);
+            var hintList = isRow ? grid.SideHints[position].Hints : grid.TopHints[position].Hints;
 
             var tempScore = 0;
             if (consecutiveList.Count > hintList.Count) return tempScore;

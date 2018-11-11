@@ -43,6 +43,45 @@ namespace NonoGramAI.Entities
             return tiles;
         }
 
+        public void Scoot(int row)
+        {
+            
+        }
+
+        public List<int> GetConsecutiveList(int position, bool isRow)
+        {
+            var consecutiveList = new List<int>();
+            var count = 0;
+            if (isRow)
+            {
+                for (int col = 0; col < Size; col++)
+                {
+                    if (Tiles[position, col].State)
+                        count++;
+                    else if (count > 0)
+                    {
+                        consecutiveList.Add(count);
+                        count = 0;
+                    }
+                }
+            }
+            else
+            {
+                for (int row = 0; row < Size; row++)
+                {
+                    if (Tiles[row, position].State)
+                        count++;
+                    else if (count > 0)
+                    {
+                        consecutiveList.Add(count);
+                        count = 0;
+                    }
+                }
+            }
+            if (count > 0) consecutiveList.Add(count);
+            return consecutiveList;
+        }
+
         public void ClearTiles()
         {
             foreach (var tile in Tiles)
