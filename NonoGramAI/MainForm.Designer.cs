@@ -35,11 +35,12 @@ namespace NonoGramAI
             this.sideListPanel = new System.Windows.Forms.TableLayoutPanel();
             this.topListPanel = new System.Windows.Forms.TableLayoutPanel();
             this.buttonPanel = new System.Windows.Forms.Panel();
+            this.genLabel = new System.Windows.Forms.Label();
             this.chooseFileButton = new System.Windows.Forms.Button();
             this.scoreLabel = new System.Windows.Forms.Label();
             this.runAIButton = new System.Windows.Forms.Button();
             this.openFileDialog = new System.Windows.Forms.OpenFileDialog();
-            this.genLabel = new System.Windows.Forms.Label();
+            this.timerLabel = new System.Windows.Forms.Label();
             this.mainPanel.SuspendLayout();
             this.buttonPanel.SuspendLayout();
             this.SuspendLayout();
@@ -110,6 +111,7 @@ namespace NonoGramAI
             // 
             // buttonPanel
             // 
+            this.buttonPanel.Controls.Add(this.timerLabel);
             this.buttonPanel.Controls.Add(this.genLabel);
             this.buttonPanel.Controls.Add(this.chooseFileButton);
             this.buttonPanel.Controls.Add(this.scoreLabel);
@@ -119,6 +121,15 @@ namespace NonoGramAI
             this.buttonPanel.Name = "buttonPanel";
             this.buttonPanel.Size = new System.Drawing.Size(100, 100);
             this.buttonPanel.TabIndex = 4;
+            // 
+            // genLabel
+            // 
+            this.genLabel.AutoSize = true;
+            this.genLabel.Location = new System.Drawing.Point(13, 34);
+            this.genLabel.Name = "genLabel";
+            this.genLabel.Size = new System.Drawing.Size(52, 17);
+            this.genLabel.TabIndex = 2;
+            this.genLabel.Text = "Gen: X";
             // 
             // chooseFileButton
             // 
@@ -148,16 +159,17 @@ namespace NonoGramAI
             this.runAIButton.TabIndex = 0;
             this.runAIButton.Text = "Run AI";
             this.runAIButton.UseVisualStyleBackColor = true;
+            this.runAIButton.Visible = false;
             this.runAIButton.Click += new System.EventHandler(this.runAIButton_Click);
             // 
-            // genLabel
+            // timerLabel
             // 
-            this.genLabel.AutoSize = true;
-            this.genLabel.Location = new System.Drawing.Point(13, 34);
-            this.genLabel.Name = "genLabel";
-            this.genLabel.Size = new System.Drawing.Size(52, 17);
-            this.genLabel.TabIndex = 2;
-            this.genLabel.Text = "Gen: X";
+            this.timerLabel.AutoSize = true;
+            this.timerLabel.Location = new System.Drawing.Point(13, 51);
+            this.timerLabel.Name = "timerLabel";
+            this.timerLabel.Size = new System.Drawing.Size(56, 17);
+            this.timerLabel.TabIndex = 3;
+            this.timerLabel.Text = "Time: X";
             // 
             // MainForm
             // 
@@ -190,6 +202,7 @@ namespace NonoGramAI
         private Label scoreLabel;
         private Button chooseFileButton;
         private Label genLabel;
+        private Label timerLabel;
     }
 }
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -12,6 +13,7 @@ namespace NonoGramAI
     public partial class MainForm : Form
     {
         private Grid _grid;
+        private Grid _initial;
         private Settings _settings = Settings.Default;
 
         public MainForm()
@@ -113,10 +115,10 @@ namespace NonoGramAI
             }
 
             _grid = new Grid(size,tiles,topHints,sideHints);
-
-            //TopMost = true;
+            _initial = _grid;
 
             chooseFileButton.Dispose();
+            runAIButton.Show();
             gridPanel.Show();
         }
 
@@ -156,14 +158,22 @@ namespace NonoGramAI
 
         private async Task<Grid> Run()
         {
-            for(var i = 0; i < _settings.Generations; i++)
+            var results = new Dictionary<Grid, int>();
+            var timer = new Stopwatch();
+            timer.Start();
+            while (results.Count < 1)
             {
-                _grid = await Task<Grid>.Factory.StartNew(() => Algorithm.Genetic(_grid));
-                UpdateDisplay();
-                genLabel.Text = "Gen: " + i;
+                do
+                    for (var i = 0; i < _settings.Generations/2; i++)
+                        _grid = await Task<Grid>.Factory.StartNew(() => Algorithm.Genetic(_grid));
+                while (results.ContainsKey(_grid));
+                results.Add(_grid,_grid.Score);
+                //UpdateDisplay();
+                _grid = _initial;
             }
-
-            return _grid;
+            timer.Stop();
+            genLabel.Text = timer.Elapsed.ToString();
+            return results.OrderByDescending(r => r.Value).First().Key;
         }
     }
 }
