@@ -1,17 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace NonoGramAI.Entities
 {
     public class Grid
     {
-        public Tile[,] Tiles { get; set; }
+        public Tile[,] Tiles { get; }
         public List<Hint> TopHints { get; }
         public List<Hint> SideHints { get; }
         public int Size { get; }
-        public int Score => Algorithm.CheckWholeScore(Tiles,TopHints,SideHints);
-        public Dictionary<Tile[,], int> ExistingPop { get; set; }
+        public Dictionary<Grid, int> ExistingPop { get; set; }
 
         public Grid(int size, Tile[,] tiles, List<Hint> top, List<Hint> side)
         {
@@ -48,8 +46,8 @@ namespace NonoGramAI.Entities
 
         public void Scoot(int row, int col, int end)
         {
-            bool temp = Tiles[row, end].State;
-            bool placeholder = Tiles[row, col].State;
+            var temp = Tiles[row, end].State;
+            var placeholder = Tiles[row, col].State;
             for (; col <= end; col++)
             {
                 Tiles[row, col].State = temp;
@@ -77,7 +75,7 @@ namespace NonoGramAI.Entities
             }
             else
             {
-                for (int row = 0; row < Size; row++)
+                for (var row = 0; row < Size; row++)
                 {
                     if (Tiles[row, position].State)
                         count++;
@@ -107,6 +105,70 @@ namespace NonoGramAI.Entities
                 for(var j = 0; j < Size; j++)
                     list.Add(Tiles[i,j]);
             return list;
+        }
+
+        public int WholeScore()
+        {
+            var score = 0;
+            for (var i = 0; i < Size; i++)
+            {    
+                //checks columns
+                var tempScore = RowColScore(i, false);            
+                score += tempScore;
+
+                //checks rows
+                tempScore = RowColScore(i, true);                   
+                score += tempScore;
+            }
+
+            return score;
+        }
+
+        public int RowColScore(int pos, bool isRow)
+        {
+            var consecutiveList = new List<int>();
+            var count = 0;
+            List<int> hintList; 
+            if (isRow)
+            {
+                hintList = SideHints[pos].Hints;
+                for (var col = 0; col < Size; col++)
+                {
+                    if (Tiles[pos, col].State)
+                        count++;
+                    else if (count > 0)
+                    {
+                        consecutiveList.Add(count);
+                        count = 0;
+                    }
+                }
+            }
+            else
+            {
+                hintList = TopHints[pos].Hints;
+                for (var row = 0; row < Size; row++)
+                {
+                    if (Tiles[row, pos].State)
+                        count++;
+                    else if (count > 0)
+                    {
+                        consecutiveList.Add(count);
+                        count = 0;
+                    }
+                }
+            }
+            if (count > 0) consecutiveList.Add(count);
+
+            var tempScore = 0;
+            if (consecutiveList.Count > hintList.Count) return tempScore;
+            //Adds one to score for every hint that has the coorsponding size
+            tempScore = hintList
+                .TakeWhile((t, x) => x < consecutiveList.Count)
+                .Where((t, x) => consecutiveList[x] == t).Count();
+            //If all a row's hints are satisfied, up score
+            if (tempScore == hintList.Count) tempScore++;
+
+            return tempScore;
         }
 
         public override int GetHashCode()

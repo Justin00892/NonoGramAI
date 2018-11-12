@@ -129,7 +129,7 @@ namespace NonoGramAI
                     tile.State = _grid.GetTiles()
                         .First(t => t.X == tile.X && t.Y == tile.Y).State;
 
-            scoreLabel.Text = "Score: " + _grid.Score;
+            scoreLabel.Text = "Score: " + _grid.WholeScore();
         }
 
         private async void runAIButton_Click(object sender, EventArgs e)
@@ -144,7 +144,11 @@ namespace NonoGramAI
                     runAIButton.Enabled = true;
                     break;
                 case 1:
-                    _grid = await Run();
+                    _grid = await RunGA();
+                    runAIButton.Enabled = true;
+                    break;
+                case 2:
+                    _grid = await RunWoC();
                     runAIButton.Enabled = true;
                     break;
                 default:
@@ -156,7 +160,27 @@ namespace NonoGramAI
             }
         }
 
-        private async Task<Grid> Run()
+        private async Task<Grid> RunGA()
+        {
+            var timer = new Stopwatch();
+            timer.Start();
+            for (var i = 0; i < _settings.Generations; i++)
+            {
+                var grid = await Task<Grid>.Factory.StartNew(() => Algorithm.Genetic(_grid));
+                if (grid.WholeScore() > _grid.WholeScore())
+                {
+                    genLabel.Text = "Gen: " + i;
+                    UpdateDisplay();
+                }
+
+                _grid = grid;
+            }            
+            timer.Stop();
+            timerLabel.Text = timer.Elapsed.ToString();
+            return _grid;
+        }
+
+        private async Task<Grid> RunWoC()
         {
             var results = new Dictionary<Grid, int>();
             var timer = new Stopwatch();
@@ -167,12 +191,12 @@ namespace NonoGramAI
                     for (var i = 0; i < _settings.Generations/2; i++)
                         _grid = await Task<Grid>.Factory.StartNew(() => Algorithm.Genetic(_grid));
                 while (results.ContainsKey(_grid));
-                results.Add(_grid,_grid.Score);
+                results.Add(_grid,_grid.WholeScore());
                 //UpdateDisplay();
                 _grid = _initial;
             }
             timer.Stop();
-            genLabel.Text = timer.Elapsed.ToString();
+            timerLabel.Text = timer.Elapsed.ToString();
             return results.OrderByDescending(r => r.Value).First().Key;
         }
     }
