@@ -7,21 +7,20 @@ namespace NonoGramAI.Entities
 {
     public class Algorithm
     {
-        private Random rnd;
-        private Grid grid;
-        private Dictionary<Grid, int> population;
+        private static Random _rnd;
+        private static Grid _grid;
+        private Dictionary<Tile[,], int> _population;
 
         public Algorithm(Grid grid)
         {
-            rnd = new Random();
-            this.grid = grid;
-
+            _rnd = new Random();
+            _grid = grid;
         }
         public Grid Random()
         {
-            var tiles = Grid.GenerateNewTiles(grid.Size);
-            var newGrid = new Grid(grid.Size, tiles, grid.TopHints, grid.SideHints);
-            for (var row = 0; row < grid.Size; row++)
+            var tiles = Grid.GenerateNewTiles(_grid.Size);
+            var newGrid = new Grid(_grid.Size, tiles, _grid.TopHints, _grid.SideHints);
+            for (var row = 0; row < _grid.Size; row++)
             {
                 RandomizeRow(newGrid, row);
             }
@@ -33,7 +32,7 @@ namespace NonoGramAI.Entities
         {
             for (var x = 0; x < grid.Shaded(row); x++)
             {
-                var col = rnd.Next(grid.Size);
+                var col = _rnd.Next(grid.Size);
                 if (grid.Tiles[row, col].State)
                     x--;
                 else
@@ -41,95 +40,99 @@ namespace NonoGramAI.Entities
             }
         }
 
-        public Grid Genetic()
+        public Grid Genetic(Dictionary<Tile[,], int> existing)
         {
-            population = new Dictionary<Grid, int>(Settings.Default.Population);
-            while (population.Count < Settings.Default.Population)
+            _population = existing ?? new Dictionary<Tile[,], int>(Settings.Default.Population);
+            while (_population.Count < Settings.Default.Population)
             {
-                Grid newGrid;
+                Tile[,] newGrid;
                 do
-                    newGrid = Random();
-                while (population.ContainsKey(newGrid));
-                population.Add(newGrid, newGrid.Score);
+                    newGrid = Random().Tiles;
+                while (_population.ContainsKey(newGrid));
+                _population.Add(newGrid, CheckWholeScore(newGrid,_grid.TopHints,_grid.SideHints));
             }
             NaturalSelection();
-            var alpha = population.OrderByDescending(g => g.Value).First();
-            Grid child;
-            population.Remove(alpha.Key);
-            KeyValuePair<Grid, int> mate;
-            while (population.Count < Settings.Default.Population)
+            var alpha = _population.OrderByDescending(g => g.Value).First();
+            _population.Remove(alpha.Key);
+            while (_population.Count < Settings.Default.Population)
             {
-                mate = population.ElementAt(rnd.Next(population.Count));
+                var mate = _population.ElementAt(_rnd.Next(_population.Count));
+                Tile[,] child;
                 do
+                {
+                    //child = Random();
                     child = Crossover(alpha.Key, mate.Key);
-                while (population.ContainsKey(child));
-                population.Add(child, child.Score);
+                    child = Mutator(child,_grid.TopHints);
+                }
+                while (_population.ContainsKey(child));
+                _population.Add(child, CheckWholeScore(child, _grid.TopHints, _grid.SideHints));
             }
-            return population.OrderByDescending(g => g.Value).FirstOrDefault().Key;
+
+            var finalGrid = new Grid(_grid.Size, _population.OrderByDescending(p => p.Value).First().Key, _grid.TopHints, _grid.SideHints)
+            {
+                ExistingPop = _population
+            };
+            return finalGrid;
         }
         private void NaturalSelection()
         {
-            var casualities = (population.OrderByDescending(g => g.Value)
+            var casualities = (_population.OrderByDescending(g => g.Value)
                                     .Skip(Settings.Default.Population / 2)
                                     .ToList());
 
             foreach (var casuality in casualities)
-                population.Remove(casuality.Key);
+                _population.Remove(casuality.Key);
         }
 
 
-        private Grid Crossover (Grid alpha, Grid mate)
+        private Tile[,] Crossover(Tile[,] alpha, Tile[,] mate)
         {
-            var tiles = Grid.GenerateNewTiles(alpha.Size);
-            var child = new Grid(alpha.Size, tiles, alpha.TopHints, alpha.SideHints);
-            var method = rnd.Next(3);
+            var size =(int) Math.Sqrt(alpha.Length);
+            var tiles = Grid.GenerateNewTiles(size);
 
             var parent = alpha;
-            for (var row = 0; row < alpha.Size; row++)
+            for (var row = 0; row < size; row++)
             {
-                switch (method)
+                switch (Settings.Default.CrossoverMethod)
                 {
                     case 0:
                         //Randomly pick row from either parent
-                        parent = rnd.NextDouble() > 0.5 ? alpha : mate;
+                        parent = _rnd.NextDouble() > 0.5 ? alpha : mate;
                         break;
                     case 1:
                         //Use parent with best row fitness
-                        parent = CheckScore(alpha, row, true) > CheckScore(mate, row, true) ? alpha : mate;
+                        parent = CheckScore(alpha, row, true, _grid.TopHints,_grid.SideHints) > 
+                                 CheckScore(mate, row, true, _grid.TopHints, _grid.SideHints) ? alpha : mate;
                         break;
                     case 2:
                         //Use any rows with perfect fitness, else random
-                        if (CheckScore(alpha, row, true) > alpha.SideHints[row].Hints.Count)
-                        parent = alpha;
-                        else if (CheckScore(mate, row, true) > mate.SideHints[row].Hints.Count)
+                        if (CheckScore(alpha, row, true, _grid.TopHints, _grid.SideHints) > 
+                            _grid.SideHints[row].Hints.Count)
+                            parent = alpha;
+                        else if (CheckScore(mate, row, true, _grid.TopHints, _grid.SideHints) > 
+                                 _grid.SideHints[row].Hints.Count)
                             parent = mate;
                         else
-                            parent = rnd.NextDouble() > 0.5 ? alpha : mate;
+                            parent = _rnd.NextDouble() > 0.5 ? alpha : mate;
                         break;
                 }
-                for (var col = 0; col < alpha.Size; col++)
+
+                for (var col = 0; col < size; col++)
                 {
-                    tiles[row, col] = parent.Tiles[row, col];
+                    tiles[row, col] = parent[row, col];
                 }
             }
-            return child; 
+
+            return tiles;
         }
 
-        private void Mutate(Grid child)
+        public Tile[,] Mutator(Tile[,] original, List<Hint> topHints)
         {
-            var tiles = Grid.GenerateNewTiles(child.Size);
-            var mutation = new Grid(child.Size, tiles, child.TopHints, child.SideHints);
-            var method = rnd.Next(3);
-            
-        }
+            var size = (int)Math.Sqrt(original.Length);
+            var tiles = Grid.GenerateNewTiles(_grid.Size);
+            var method = _rnd.Next(4);
 
-        public Grid Mutator(Grid original)
-        {
-            var tiles = Grid.GenerateNewTiles(original.Size);
-            var mutation = new Grid(original.Size, tiles, original.TopHints, original.SideHints);
-            var method = rnd.Next(4);
-
-            for (var row = 0; row < original.Size; row++)
+            for (var row = 0; row < size; row++)
             {
                 switch (method)
                 {
@@ -139,36 +142,97 @@ namespace NonoGramAI.Entities
 
                         break;
                     case 1:
-                        //Column Too-Many: Look for a column with too many shaded values in it, select a shaded square. 
-                        //       Within that shaded square's row, swap the shaded square with a non-shaded square.
-
                         //because we are solving a square, if we had rectangles this would need to be random by #columns.
                         var col = row;
-                        //if(original.Shaded())
-
-                        break;
-                    case 2:
+                        var shaded = 0;
+                        for (var r = 0; r < size; r++)
+                            if (tiles[r, col].State)
+                                shaded++;
+                        //Column Too-Many: Look for a column with too many shaded values in it, select a shaded square. 
+                        //       Within that shaded square's row, swap the shaded square with a non-shaded square.
+                        if (shaded > topHints[col].Hints.Sum())
+                        {
+                            int i;
+                            do
+                                i = _rnd.Next(size);
+                            while (!tiles[row, i].State);
+                            TooManyTooFew(col, i, tiles);
+                        }
                         //Column Too-Few: Look for a column with too few shaded values in it, select a non-shaded square. 
                         //       Within that non-shaded square's row, swap the non-shaded square with a shaded square.
-
+                        else if (shaded < topHints[col].Hints.Sum())
+                        {
+                            int i;
+                            do
+                                i = _rnd.Next(size);
+                            while (tiles[row, i].State);
+                            TooManyTooFew(col, i, tiles);
+                        }
+                        
                         break;
                     case 3:
                         //Randomize Row
-                        RandomizeRow(grid, row);
+                        RandomizeRow(_grid, row);
+                        break;
+                    default:
+                        RandomizeRow(_grid, row);
                         break;
                 }
-                for (var col = 0; col < original.Size; col++)
+                for (var col = 0; col < size; col++)
                 {
-                    tiles[row, col] = original.Tiles[row, col];
+                    tiles[row, col] = original[row, col];
                 }
             }
-            return mutation;
+            return tiles;
         }
 
-        public static int CheckScore(Grid grid, int position, bool isRow)
+        private static void TooManyTooFew(int colNum, int rowNum, Tile[,] tiles)
         {
-            var consecutiveList = grid.GetConsecutiveList(position, isRow);
-            var hintList = isRow ? grid.SideHints[position].Hints : grid.TopHints[position].Hints;
+            var state = tiles[rowNum, colNum].State;
+            int rndInt;
+            do
+                rndInt = _rnd.Next((int)Math.Sqrt(tiles.Length));
+            while (rndInt == rowNum && tiles[rowNum, rndInt].State != state);
+
+            tiles[rowNum, colNum].State = !state;
+            tiles[rowNum, rndInt].State = state;
+        }
+
+        private static int CheckScore(Tile[,] grid, int position, bool isRow, List<Hint> topHints, List<Hint> sideHints)
+        {
+            var size = Math.Sqrt(grid.Length);
+            var consecutiveList = new List<int>();
+            var count = 0;
+            List<int> hintList; 
+            if (isRow)
+            {
+                hintList = sideHints[position].Hints;
+                for (var col = 0; col < size; col++)
+                {
+                    if (grid[position, col].State)
+                        count++;
+                    else if (count > 0)
+                    {
+                        consecutiveList.Add(count);
+                        count = 0;
+                    }
+                }
+            }
+            else
+            {
+                hintList = topHints[position].Hints;
+                for (var row = 0; row < size; row++)
+                {
+                    if (grid[row, position].State)
+                        count++;
+                    else if (count > 0)
+                    {
+                        consecutiveList.Add(count);
+                        count = 0;
+                    }
+                }
+            }
+            if (count > 0) consecutiveList.Add(count);
 
             var tempScore = 0;
             if (consecutiveList.Count > hintList.Count) return tempScore;
@@ -182,17 +246,18 @@ namespace NonoGramAI.Entities
             return tempScore;
         }
         
-        public static int CheckWholeScore(Grid grid)
+        public static int CheckWholeScore(Tile[,] grid, List<Hint> topHints, List<Hint> sideHints)
         {
             var score = 0;
-            for (var i = 0; i < grid.Size; i++)
+            var size = Math.Sqrt(grid.Length);
+            for (var i = 0; i < size; i++)
             {    
                 //checks columns
-                var tempScore = CheckScore(grid, i, false);            
+                var tempScore = CheckScore(grid, i, false, topHints,sideHints);            
                 score += tempScore;
 
                 //checks rows
-                tempScore = CheckScore(grid, i, true);                   
+                tempScore = CheckScore(grid, i, true, topHints, sideHints);                   
                 score += tempScore;
             }
 
