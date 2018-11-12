@@ -12,7 +12,6 @@ namespace NonoGramAI
     public partial class MainForm : Form
     {
         private Grid _grid;
-        private Algorithm _algorithm;
         private Settings _settings = Settings.Default;
 
         public MainForm()
@@ -134,12 +133,11 @@ namespace NonoGramAI
         private async void runAIButton_Click(object sender, EventArgs e)
         {
             runAIButton.Enabled = false;
-            _algorithm = new Algorithm(_grid);
             switch (_settings.Algorithm)
             {
                 case 0:
                     _grid = await Task<Grid>.Factory.StartNew(
-                        () => _algorithm.Random());
+                        () => Algorithm.Random(_grid));
                     UpdateDisplay();
                     runAIButton.Enabled = true;
                     break;
@@ -149,7 +147,7 @@ namespace NonoGramAI
                     break;
                 default:
                     _grid = await Task<Grid>.Factory.StartNew(
-                        () => _algorithm.Random());
+                        () => Algorithm.Random(_grid));
                     UpdateDisplay();
                     runAIButton.Enabled = true;
                     break;
@@ -158,10 +156,9 @@ namespace NonoGramAI
 
         private async Task<Grid> Run()
         {
-            _algorithm = new Algorithm(_grid);
             for(var i = 0; i < _settings.Generations; i++)
             {
-                _grid = await Task<Grid>.Factory.StartNew(() => _algorithm.Genetic(_grid.ExistingPop));
+                _grid = await Task<Grid>.Factory.StartNew(() => Algorithm.Genetic(_grid));
                 UpdateDisplay();
                 genLabel.Text = "Gen: " + i;
             }
