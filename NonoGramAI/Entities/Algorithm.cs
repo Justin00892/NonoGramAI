@@ -62,13 +62,13 @@ namespace NonoGramAI.Entities
                 {
                     //child = Random();
                     child = Crossover(alpha.Key, mate.Key);
-                    //child = Mutator(child);
+                    child = Mutator(child,_grid.TopHints);
                 }
                 while (_population.ContainsKey(child));
                 _population.Add(child, CheckWholeScore(child, _grid.TopHints, _grid.SideHints));
             }
 
-            var finalGrid = new Grid(_grid.Size, alpha.Key, _grid.TopHints, _grid.SideHints)
+            var finalGrid = new Grid(_grid.Size, _population.OrderByDescending(p => p.Value).First().Key, _grid.TopHints, _grid.SideHints)
             {
                 ExistingPop = _population
             };

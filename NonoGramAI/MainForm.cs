@@ -163,6 +163,7 @@ namespace NonoGramAI
             {
                 _grid = await Task<Grid>.Factory.StartNew(() => _algorithm.Genetic(_grid.ExistingPop));
                 UpdateDisplay();
+                genLabel.Text = "Gen: " + i;
             }
 
             return _grid;
