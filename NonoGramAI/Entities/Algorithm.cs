@@ -7,29 +7,23 @@ namespace NonoGramAI.Entities
 {
     public class Algorithm
     {
-        private static Random _rnd;
         private static Grid _grid;
-        private Dictionary<Tile[,], int> _population;
+        private static Dictionary<Tile[,], int> _population;
+        private static Random _rnd = new Random();
 
-        public Algorithm(Grid grid)
+        public static Grid Random(Grid grid)
         {
-            _rnd = new Random();
-            _grid = grid;
-        }
-        public Grid Random()
-        {
-            var tiles = Grid.GenerateNewTiles(_grid.Size);
-            var newGrid = new Grid(_grid.Size, tiles, _grid.TopHints, _grid.SideHints);
-            for (var row = 0; row < _grid.Size; row++)
-            {
+            var tiles = Grid.GenerateNewTiles(grid.Size);
+            var newGrid = new Grid(grid.Size, tiles, grid.TopHints, grid.SideHints);
+            for (var row = 0; row < grid.Size; row++)
                 RandomizeRow(newGrid, row);
-            }
 
             return newGrid;
         }
 
-        private void RandomizeRow(Grid grid, int row)
+        private static void RandomizeRow(Grid grid, int row)
         {
+            
             for (var x = 0; x < grid.Shaded(row); x++)
             {
                 var col = _rnd.Next(grid.Size);
@@ -40,41 +34,41 @@ namespace NonoGramAI.Entities
             }
         }
 
-        public Grid Genetic(Dictionary<Tile[,], int> existing)
+        public static Grid Genetic(Grid grid)
         {
-            _population = existing ?? new Dictionary<Tile[,], int>(Settings.Default.Population);
+            _grid = grid;
+            _population = _grid.ExistingPop ?? new Dictionary<Tile[,], int>(Settings.Default.Population);
             while (_population.Count < Settings.Default.Population)
             {
                 Tile[,] newGrid;
                 do
-                    newGrid = Random().Tiles;
+                    newGrid = Random(_grid).Tiles;
                 while (_population.ContainsKey(newGrid));
                 _population.Add(newGrid, CheckWholeScore(newGrid,_grid.TopHints,_grid.SideHints));
             }
             NaturalSelection();
-            var alpha = _population.OrderByDescending(g => g.Value).First();
-            _population.Remove(alpha.Key);
+            var alpha = _population.OrderByDescending(g => g.Value).First().Key;
+            _population.Remove(alpha);
             while (_population.Count < Settings.Default.Population)
             {
-                var mate = _population.ElementAt(_rnd.Next(_population.Count));
+                var mate = _population.ElementAt(_rnd.Next(_population.Count)).Key;
                 Tile[,] child;
                 do
                 {
-                    //child = Random();
-                    child = Crossover(alpha.Key, mate.Key);
-                    child = Mutator(child,_grid.TopHints);
+                    child = Crossover(alpha, mate);
+                    child = Mutator(child);
                 }
                 while (_population.ContainsKey(child));
                 _population.Add(child, CheckWholeScore(child, _grid.TopHints, _grid.SideHints));
             }
 
-            var finalGrid = new Grid(_grid.Size, _population.OrderByDescending(p => p.Value).First().Key, _grid.TopHints, _grid.SideHints)
+            var finalGrid = new Grid(_grid.Size, alpha, _grid.TopHints, _grid.SideHints)
             {
                 ExistingPop = _population
             };
             return finalGrid;
         }
-        private void NaturalSelection()
+        private static void NaturalSelection()
         {
             var casualities = (_population.OrderByDescending(g => g.Value)
                                     .Skip(Settings.Default.Population / 2)
@@ -85,15 +79,16 @@ namespace NonoGramAI.Entities
         }
 
 
-        private Tile[,] Crossover(Tile[,] alpha, Tile[,] mate)
-        {
+        private static Tile[,] Crossover(Tile[,] alpha, Tile[,] mate)
+        {         
             var size =(int) Math.Sqrt(alpha.Length);
             var tiles = Grid.GenerateNewTiles(size);
+            var method = Settings.Default.CrossoverMethod == 3 ? _rnd.Next(3) : Settings.Default.CrossoverMethod;
 
-            var parent = alpha;
             for (var row = 0; row < size; row++)
             {
-                switch (Settings.Default.CrossoverMethod)
+                Tile[,] parent;
+                switch (method)
                 {
                     case 0:
                         //Randomly pick row from either parent
@@ -115,6 +110,9 @@ namespace NonoGramAI.Entities
                         else
                             parent = _rnd.NextDouble() > 0.5 ? alpha : mate;
                         break;
+                    default:
+                        parent = alpha;
+                        break;
                 }
 
                 for (var col = 0; col < size; col++)
@@ -126,11 +124,11 @@ namespace NonoGramAI.Entities
             return tiles;
         }
 
-        public Tile[,] Mutator(Tile[,] original, List<Hint> topHints)
+        private static Tile[,] Mutator(Tile[,] original)
         {
             var size = (int)Math.Sqrt(original.Length);
             var tiles = Grid.GenerateNewTiles(_grid.Size);
-            var method = _rnd.Next(4);
+            var method = Settings.Default.MutationMethod == 4 ? _rnd.Next(4) : Settings.Default.MutationMethod;
 
             for (var row = 0; row < size; row++)
             {
@@ -150,7 +148,7 @@ namespace NonoGramAI.Entities
                                 shaded++;
                         //Column Too-Many: Look for a column with too many shaded values in it, select a shaded square. 
                         //       Within that shaded square's row, swap the shaded square with a non-shaded square.
-                        if (shaded > topHints[col].Hints.Sum())
+                        if (shaded > _grid.TopHints[col].Hints.Sum())
                         {
                             int i;
                             do
@@ -160,7 +158,7 @@ namespace NonoGramAI.Entities
                         }
                         //Column Too-Few: Look for a column with too few shaded values in it, select a non-shaded square. 
                         //       Within that non-shaded square's row, swap the non-shaded square with a shaded square.
-                        else if (shaded < topHints[col].Hints.Sum())
+                        else if (shaded < _grid.TopHints[col].Hints.Sum())
                         {
                             int i;
                             do
@@ -188,10 +186,11 @@ namespace NonoGramAI.Entities
 
         private static void TooManyTooFew(int colNum, int rowNum, Tile[,] tiles)
         {
+            var rnd = new Random();
             var state = tiles[rowNum, colNum].State;
             int rndInt;
             do
-                rndInt = _rnd.Next((int)Math.Sqrt(tiles.Length));
+                rndInt = rnd.Next((int)Math.Sqrt(tiles.Length));
             while (rndInt == rowNum && tiles[rowNum, rndInt].State != state);
 
             tiles[rowNum, colNum].State = !state;
