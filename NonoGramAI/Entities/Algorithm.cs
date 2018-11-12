@@ -55,9 +55,8 @@ namespace NonoGramAI.Entities
                 Tile[,] child;
                 do
                 {
-                    //child = Random();
                     child = Crossover(alpha, mate);
-                    //child = Mutator(child,_grid.TopHints);
+                    child = Mutator(child);
                 }
                 while (_population.ContainsKey(child));
                 _population.Add(child, CheckWholeScore(child, _grid.TopHints, _grid.SideHints));
@@ -125,7 +124,7 @@ namespace NonoGramAI.Entities
             return tiles;
         }
 
-        private static Tile[,] Mutator(Tile[,] original, List<Hint> topHints)
+        private static Tile[,] Mutator(Tile[,] original)
         {
             var size = (int)Math.Sqrt(original.Length);
             var tiles = Grid.GenerateNewTiles(_grid.Size);
@@ -149,7 +148,7 @@ namespace NonoGramAI.Entities
                                 shaded++;
                         //Column Too-Many: Look for a column with too many shaded values in it, select a shaded square. 
                         //       Within that shaded square's row, swap the shaded square with a non-shaded square.
-                        if (shaded > topHints[col].Hints.Sum())
+                        if (shaded > _grid.TopHints[col].Hints.Sum())
                         {
                             int i;
                             do
@@ -159,7 +158,7 @@ namespace NonoGramAI.Entities
                         }
                         //Column Too-Few: Look for a column with too few shaded values in it, select a non-shaded square. 
                         //       Within that non-shaded square's row, swap the non-shaded square with a shaded square.
-                        else if (shaded < topHints[col].Hints.Sum())
+                        else if (shaded < _grid.TopHints[col].Hints.Sum())
                         {
                             int i;
                             do
