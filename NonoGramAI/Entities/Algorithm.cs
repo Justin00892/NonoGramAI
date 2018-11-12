@@ -16,21 +16,25 @@ namespace NonoGramAI.Entities
             var tiles = Grid.GenerateNewTiles(grid.Size);
             var newGrid = new Grid(grid.Size, tiles, grid.TopHints, grid.SideHints);
             for (var row = 0; row < grid.Size; row++)
-                RandomizeRow(newGrid, row);
+                RandomizeRow(newGrid.Tiles, row);
 
             return newGrid;
         }
 
-        private static void RandomizeRow(Grid grid, int row)
+        private static void RandomizeRow(Tile[,] tiles, int row)
         {
-            
-            for (var x = 0; x < grid.Shaded(row); x++)
+            for (var x = 0; x < _grid.Size; x++)
             {
-                var col = _rnd.Next(grid.Size);
-                if (grid.Tiles[row, col].State)
+                tiles[row, x].State = false;
+            }
+
+            for (var x = 0; x < _grid.Shaded(row); x++)
+            {
+                var col = _rnd.Next(_grid.Size);
+                if (tiles[row, col].State)
                     x--;
                 else
-                    grid.Tiles[row, col].State = true;
+                    tiles[row, col].State = true;
             }
         }
 
@@ -52,11 +56,14 @@ namespace NonoGramAI.Entities
             while (_population.Count < Settings.Default.Population)
             {
                 var mate = _population.ElementAt(_rnd.Next(_population.Count)).Key;
-                Tile[,] child;
+                Tile[,] child, mutation;
                 do
                 {
                     child = Crossover(alpha, mate);
-                    child = Mutator(child);
+                    mutation = Mutator(child);
+
+                    child = CheckWholeScore(child, _grid.TopHints, _grid.SideHints)
+                        > CheckWholeScore(mutation, _grid.TopHints, _grid.SideHints) ? child : mutation;
                 }
                 while (_population.ContainsKey(child));
                 _population.Add(child, CheckWholeScore(child, _grid.TopHints, _grid.SideHints));
@@ -128,7 +135,7 @@ namespace NonoGramAI.Entities
         {
             var size = (int)Math.Sqrt(original.Length);
             var tiles = Grid.GenerateNewTiles(_grid.Size);
-            var method = Settings.Default.MutationMethod == 4 ? _rnd.Next(4) : Settings.Default.MutationMethod;
+            var method = Settings.Default.MutationMethod; //== 4 ? _rnd.Next(4) : Settings.Default.MutationMethod;
 
             for (var row = 0; row < size; row++)
             {
@@ -170,16 +177,16 @@ namespace NonoGramAI.Entities
                         break;
                     case 3:
                         //Randomize Row
-                        RandomizeRow(_grid, row);
+                        RandomizeRow(tiles, row);
                         break;
                     default:
-                        RandomizeRow(_grid, row);
+                        RandomizeRow(tiles, row);
                         break;
                 }
-                for (var col = 0; col < size; col++)
-                {
-                    tiles[row, col] = original[row, col];
-                }
+                //for (var col = 0; col < size; col++)
+                //{
+                //    tiles[row, col] = original[row, col];
+                //}
             }
             return tiles;
         }

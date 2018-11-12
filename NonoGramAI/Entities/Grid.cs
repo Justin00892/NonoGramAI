@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace NonoGramAI.Entities
@@ -45,9 +46,16 @@ namespace NonoGramAI.Entities
             return tiles;
         }
 
-        public void Scoot(int row)
+        public void Scoot(int row, int col, int end)
         {
-            
+            bool temp = Tiles[row, end].State;
+            bool placeholder = Tiles[row, col].State;
+            for (; col <= end; col++)
+            {
+                Tiles[row, col].State = temp;
+                temp = placeholder;
+                placeholder = Tiles[row, col + 1].State;
+            }
         }
 
         public List<int> GetConsecutiveList(int position, bool isRow)
