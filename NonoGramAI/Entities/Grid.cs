@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace NonoGramAI.Entities
@@ -9,6 +10,8 @@ namespace NonoGramAI.Entities
         public List<Hint> TopHints { get; }
         public List<Hint> SideHints { get; }
         public int Size { get; }
+        public int Score { get; set; }
+        public int Stagnant { get; set; }
         public Dictionary<Grid, int> ExistingPop { get; set; }
 
         public Grid(int size, Tile[,] tiles, List<Hint> top, List<Hint> side)
@@ -17,6 +20,7 @@ namespace NonoGramAI.Entities
             TopHints = top;
             SideHints = side;
             Size = size;
+            Score = WholeScore();
         }
 
         public int Shaded(int row)
@@ -42,6 +46,11 @@ namespace NonoGramAI.Entities
                 }
             }
             return tiles;
+        }
+
+        public void ReloadScore()
+        {
+            Score = WholeScore();
         }
 
         public void Scoot(int row, int col, int end)
@@ -161,7 +170,7 @@ namespace NonoGramAI.Entities
 
             var tempScore = 0;
             if (consecutiveList.Count > hintList.Count) return tempScore;
-            //Adds one to score for every hint that has the coorsponding size
+            //Adds one to score for every hint that has the corresponding size
             tempScore = hintList
                 .TakeWhile((t, x) => x < consecutiveList.Count)
                 .Where((t, x) => consecutiveList[x] == t).Count();

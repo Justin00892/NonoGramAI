@@ -47,10 +47,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Entities\Algorithm.cs" />
+    <Compile Include="Entities\Crowds.cs" />
     <Compile Include="Entities\Grid.cs" />
     <Compile Include="Entities\Hint.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Entities\Row.cs" />
     <Compile Include="Entities\Tile.cs">
       <SubType>Component</SubType>
     </Compile>

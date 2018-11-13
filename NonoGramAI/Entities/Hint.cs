@@ -13,7 +13,7 @@ namespace NonoGramAI.Entities
             Hints = hints;
 
             Text = "";
-            Font = new Font("Comic Sans MS", 12F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            Font = new Font("Comic Sans MS", 11F, FontStyle.Regular, GraphicsUnit.Point, 0);
             Margin = new Padding(0);
             Padding = new Padding(0);
             BackColor = Color.White;

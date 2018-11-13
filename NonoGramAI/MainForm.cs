@@ -13,8 +13,7 @@ namespace NonoGramAI
     public partial class MainForm : Form
     {
         private Grid _grid;
-        private Grid _initial;
-        private Settings _settings = Settings.Default;
+        private readonly Settings _settings = Settings.Default;
 
         public MainForm()
         {
@@ -115,7 +114,6 @@ namespace NonoGramAI
             }
 
             _grid = new Grid(size,tiles,topHints,sideHints);
-            _initial = _grid;
 
             chooseFileButton.Dispose();
             runAIButton.Show();
@@ -167,37 +165,37 @@ namespace NonoGramAI
             for (var i = 0; i < _settings.Generations; i++)
             {
                 var grid = await Task<Grid>.Factory.StartNew(() => Algorithm.Genetic(_grid));
-                if (grid.WholeScore() > _grid.WholeScore())
-                {
-                    genLabel.Text = "Gen: " + i;
+                if (grid.Score > _grid.Score)                   
                     UpdateDisplay();
-                }
-
-                _grid = grid;
+                genLabel.Text = "Gen: " + i;
+                _grid = grid; 
             }            
             timer.Stop();
-            timerLabel.Text = timer.Elapsed.ToString();
+            
             return _grid;
         }
 
         private async Task<Grid> RunWoC()
         {
-            var results = new Dictionary<Grid, int>();
             var timer = new Stopwatch();
+            var results = new List<Grid>(); 
             timer.Start();
-            while (results.Count < 1)
+            for(var i = 0; i < _settings.Population/2; i++)
             {
-                do
-                    for (var i = 0; i < _settings.Generations/2; i++)
-                        _grid = await Task<Grid>.Factory.StartNew(() => Algorithm.Genetic(_grid));
-                while (results.ContainsKey(_grid));
-                results.Add(_grid,_grid.WholeScore());
-                //UpdateDisplay();
-                _grid = _initial;
+                for (var x = 0; x < _settings.Generations; x++)
+                {
+                    var grid = await Task<Grid>.Factory.StartNew(() => Algorithm.Genetic(_grid));
+                    _grid = grid;
+                }
+                results.Add(_grid);
+                genLabel.Text = "Complete: " + results.Count;
+                _grid.ExistingPop = null;
             }
+            var final = Crowds.Crowd(results);
             timer.Stop();
             timerLabel.Text = timer.Elapsed.ToString();
-            return results.OrderByDescending(r => r.Value).First().Key;
+            UpdateDisplay();
+            return final;
         }
     }
 }
