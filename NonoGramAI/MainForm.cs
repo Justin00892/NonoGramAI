@@ -128,6 +128,7 @@ namespace NonoGramAI
                         .First(t => t.X == tile.X && t.Y == tile.Y).State;
 
             scoreLabel.Text = "Score: " + _grid.WholeScore();
+            
         }
 
         private async void runAIButton_Click(object sender, EventArgs e)
@@ -165,11 +166,14 @@ namespace NonoGramAI
             for (var i = 0; i < _settings.Generations; i++)
             {
                 var grid = await Task<Grid>.Factory.StartNew(() => Algorithm.Genetic(_grid));
-                if (grid.Score > _grid.Score)                   
-                    UpdateDisplay();
+                //if (grid.Score > _grid.Score) 
+                _grid = grid;
+                UpdateDisplay();
                 genLabel.Text = "Gen: " + i;
-                _grid = grid; 
-            }            
+
+                await Task.Delay(1000);
+            }
+
             timer.Stop();
             
             return _grid;
