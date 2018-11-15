@@ -146,36 +146,31 @@ namespace NonoGramAI.Entities
                         break;
                     case 1:
                         //because we are solving a square, if we had rectangles this would need to be random by #columns.
+                        //DO NOT need to swap in row = row, row now only refers to col
                         var col = row;
                         var whiteSpace = new List<int>();
                         var shadedSpace = new List<int>();
-                        var shaded = 0;
                         for (var r = 0; r < original.Size; r++)
+                        {
+                            //For each shaded in a col
                             if (newGrid.Tiles[r, col].State)
-                            {
-                                shaded++;
                                 shadedSpace.Add(r);
-                            }
-                                
                             else
                                 whiteSpace.Add(r);
+                        }
 
                         //Column Too-Many: Look for a column with too many shaded values in it, select a shaded square. 
                         //       Within that shaded square's row, swap the shaded square with a non-shaded square.
-                        
-                        if (shaded > _grid.TopHints[col].Hints.Sum())
-                        {
-                            if (whiteSpace.Any())
-                                TooManyTooFew(col, whiteSpace[rnd.Next(whiteSpace.Count)], newGrid);
-                        }
+
+                        var sum = _grid.TopHints[col].Hints.Sum();
+                        if (shadedSpace.Count > sum)
+                            row = shadedSpace[rnd.Next(shadedSpace.Count)];
                         //Column Too-Few: Look for a column with too few shaded values in it, select a non-shaded square. 
                         //       Within that non-shaded square's row, swap the non-shaded square with a shaded square.
-                        else if (shaded < _grid.TopHints[col].Hints.Sum())
-                        {
-                            if (shadedSpace.Any())
-                                TooManyTooFew(col, shadedSpace[rnd.Next(shadedSpace.Count)], newGrid);
-                        }
-                        
+                        else if (shadedSpace.Count < sum)
+                            row = whiteSpace[rnd.Next(whiteSpace.Count)];
+                        if (shadedSpace.Count != sum)
+                            TooManyTooFew(col, row, newGrid);
                         break;
                     default:
                         RandomizeRow(newGrid, row,rnd);
@@ -190,13 +185,20 @@ namespace NonoGramAI.Entities
         {
             var rnd = new Random();
             var state = grid.Tiles[rowNum, colNum].State;
+            var possibleSwaps = new List<int>();
             int rndInt;
-            do
-                rndInt = rnd.Next(grid.Size);
-            while (rndInt == rowNum && grid.Tiles[rowNum, rndInt].State != state);
-
-            grid.Tiles[rowNum, colNum].State = !state;
-            grid.Tiles[rowNum, rndInt].State = state;
+            for (int col = 0; col < grid.Size; col++)
+            {
+                if (grid.Tiles[rowNum, col].State != state)
+                    possibleSwaps.Add(col);
+            }
+            if (possibleSwaps.Any())
+            {
+                rndInt = possibleSwaps[rnd.Next(possibleSwaps.Count)];
+                grid.Tiles[rowNum, colNum].State = !state;
+                grid.Tiles[rowNum, rndInt].State = state;
+            }
+            
         }
     }
 }
