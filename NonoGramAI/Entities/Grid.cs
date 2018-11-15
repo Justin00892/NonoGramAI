@@ -53,16 +53,33 @@ namespace NonoGramAI.Entities
             Score = WholeScore();
         }
 
+        //Scoots forward if end is greater than col and backwards if end is less than col
         public void Scoot(int row, int col, int end)
         {
             var temp = Tiles[row, end].State;
-            var placeholder = Tiles[row, col].State;
-            for (; col <= end; col++)
+            bool placeholder = Tiles[row, col].State;
+            while (col != end)
             {
                 Tiles[row, col].State = temp;
                 temp = placeholder;
-                placeholder = Tiles[row, col + 1].State;
+                if (end > col)
+                {
+                    //Have to account for accessing tile outside array (value will not be used)
+                    //placeholder = col + 1 < Size ? Tiles[row, col + 1].State : false;
+                    placeholder = Tiles[row, col + 1].State;
+                    col++;
+                }
+                else if (end < col)
+                {
+                    //Have to account for accessing tile outside array (value will not be used)
+                    //placeholder = col >= 0 ? Tiles[row, (col - 1)].State : false;
+                    placeholder = Tiles[row, col - 1].State;
+                    col--;
+                }
+                if (col == end)
+                    Tiles[row, col].State = temp;
             }
+
         }
 
         public List<int> GetConsecutiveList(int position, bool isRow)

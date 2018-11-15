@@ -24,6 +24,7 @@ namespace NonoGramAI.Entities
 
         private static void RandomizeRow(Grid grid, int row, Random rnd)
         {
+            _grid = grid;
             for (var x = 0; x < grid.Size; x++)
                 grid.Tiles[row, x].State = false;
 
@@ -130,26 +131,54 @@ namespace NonoGramAI.Entities
             return newGrid;
         }
 
-        private static Grid Mutator(Grid original)
+        public static Grid Mutator(Grid original)
         {
             var rnd = new Random();
-            var newGrid = new Grid(original.Size,original.Tiles,original.TopHints,original.SideHints);
+            var mutation = new Grid(original.Size,original.Tiles,original.TopHints,original.SideHints);
             var method = Settings.Default.MutationMethod == 2 ? rnd.Next(2) : Settings.Default.MutationMethod;
-
-            for (var row = 0; row < original.Size; row++)
+            int col, row = rnd.Next(_grid.Size);
+            
+            for (row = 0; row < original.Size; row++)
             {
                 switch (method)
                 {
                     case 0:
-                        //Scoot: Go through a row using the hint values, and verify that the shaded squares match.
-                        //       if there are too many shaded squares in a row, scoot them over to get the correct distribution.
-                        break;
+                    //Scoot: Go through a row using the hint values, and verify that the shaded squares match.
+                    //       if there are too many shaded squares in a row, scoot them over to get the correct distribution.
+                    var tiles = mutation.GetConsecutiveList(row, true);
+                    var hints = mutation.SideHints[row].Hints;
+                    var optimumSwaps = new List<int>();
+                    var position = 0;
+                    var counter = 0;
+                    int? swapCol = null;
+                    for (col = 0; col < mutation.Size; col++)
+                    {
+                        if (mutation.Tiles[row, col].State && position < hints.Count)
+                        {
+                            counter++;
+                            if (counter > hints[position] && swapCol == null)
+                                swapCol = col;
+                        }
+                        else if (counter > 0 && position < hints.Count)
+                        {
+                            if (counter < hints[position])
+                                optimumSwaps.Add(col);
+                            position++;
+                            counter = 0;
+                        }
+                        else
+                            optimumSwaps.Add(col);
+                    }
+                    if (swapCol != null)
+                        mutation.Scoot(row, swapCol.Value, optimumSwaps[rnd.Next(optimumSwaps.Count)]);
+
+                    break;
                     case 1:
                         //because we are solving a square, if we had rectangles this would need to be random by #columns.
-                        var col = row;
+                        col = row;
                         var shaded = 0;
                         for (var r = 0; r < original.Size; r++)
-                            if (newGrid.Tiles[r, col].State)
+                            if (mutation.Tiles[r, col].State)
                                 shaded++;
                         //Column Too-Many: Look for a column with too many shaded values in it, select a shaded square. 
                         //       Within that shaded square's row, swap the shaded square with a non-shaded square.
@@ -158,8 +187,8 @@ namespace NonoGramAI.Entities
                             int i;
                             do
                                 i = rnd.Next(original.Size);
-                            while (!newGrid.Tiles[row, i].State);
-                            TooManyTooFew(col, i, newGrid);
+                            while (!mutation.Tiles[row, i].State);
+                            TooManyTooFew(col, i, mutation);
                         }
                         //Column Too-Few: Look for a column with too few shaded values in it, select a non-shaded square. 
                         //       Within that non-shaded square's row, swap the non-shaded square with a shaded square.
@@ -168,18 +197,18 @@ namespace NonoGramAI.Entities
                             int i;
                             do
                                 i = rnd.Next(original.Size);
-                            while (newGrid.Tiles[row, i].State);
-                            TooManyTooFew(col, i, newGrid);
+                            while (mutation.Tiles[row, i].State);
+                            TooManyTooFew(col, i, mutation);
                         }
                         
                         break;
                     default:
-                        RandomizeRow(newGrid, row,rnd);
+                        RandomizeRow(mutation, row,rnd);
                         break;
-                }
+               }
             }
-            newGrid.ReloadScore();
-            return newGrid;
+            mutation.ReloadScore();
+            return mutation;
         }
 
         private static void TooManyTooFew(int colNum, int rowNum, Grid grid)
