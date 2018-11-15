@@ -143,34 +143,51 @@ namespace NonoGramAI.Entities
                 switch (method)
                 {
                     case 0:
-                    //Scoot: Go through a row using the hint values, and verify that the shaded squares match.
-                    //       if there are too many shaded squares in a row, scoot them over to get the correct distribution.
-                    var tiles = mutation.GetConsecutiveList(row, true);
-                    var hints = mutation.SideHints[row].Hints;
-                    var optimumSwaps = new List<int>();
-                    var position = 0;
-                    var counter = 0;
-                    int? swapCol = null;
-                    for (col = 0; col < mutation.Size; col++)
-                    {
-                        if (mutation.Tiles[row, col].State && position < hints.Count)
+                        //Scoot: Go through a row using the hint values, and verify that the shaded squares match.
+                        //       if there are too many shaded squares in a row, scoot them over to get the correct distribution.
+                        var tiles = mutation.GetConsecutiveList(row, true);
+                        var hints = mutation.SideHints[row].Hints;
+                        var optimumSwaps = new List<int>();
+                        var whiteSpace = new List<int>();
+                        var position = 0;
+                        var counter = 0;
+                        int? swapCol = null;
+                        for (col = 0; col < mutation.Size; col++)
                         {
-                            counter++;
-                            if (counter > hints[position] && swapCol == null)
-                                swapCol = col;
+                            if (mutation.Tiles[row, col].State)
+                            {
+                                counter++;
+                                if (position < hints.Count)
+                                {
+                                    if (counter > hints[position] && swapCol == null)
+                                        swapCol = col;
+                                }
+                                else
+                                {
+                                    if (swapCol == null)
+                                        swapCol = col;
+                                }
+                                    
+                            }
+                            else if (counter > 0)
+                            {
+                                if (position >= hints.Count || (position < hints.Count && counter < hints[position]))
+                                    optimumSwaps.Add(col);
+                                position++;
+                                counter = 0;
+                            }
+                            if (counter == 0)
+                                whiteSpace.Add(col);
                         }
-                        else if (counter > 0 && position < hints.Count)
+                        int swapEnd = _grid.Size - 1;
+                        if (swapCol != null)
                         {
-                            if (counter < hints[position])
-                                optimumSwaps.Add(col);
-                            position++;
-                            counter = 0;
+                            swapEnd = optimumSwaps.Any() 
+                                    ? optimumSwaps[rnd.Next(optimumSwaps.Count)] 
+                                    : whiteSpace[rnd.Next(whiteSpace.Count)];
+                            mutation.Scoot(row, swapCol.Value, swapEnd);
                         }
-                        else
-                            optimumSwaps.Add(col);
-                    }
-                    if (swapCol != null)
-                        mutation.Scoot(row, swapCol.Value, optimumSwaps[rnd.Next(optimumSwaps.Count)]);
+                        
 
                     break;
                     case 1:

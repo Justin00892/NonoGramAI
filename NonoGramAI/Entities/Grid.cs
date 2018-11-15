@@ -56,6 +56,13 @@ namespace NonoGramAI.Entities
         //Scoots forward if end is greater than col and backwards if end is less than col
         public void Scoot(int row, int col, int end)
         {
+            //Start backwards scoot at the beginning on the consecutive tiles
+            if (end < col)
+            {
+                while (Tiles[row, col].State)
+                    col--;
+                col++;
+            }
             var temp = Tiles[row, end].State;
             bool placeholder = Tiles[row, col].State;
             while (col != end)
@@ -64,15 +71,11 @@ namespace NonoGramAI.Entities
                 temp = placeholder;
                 if (end > col)
                 {
-                    //Have to account for accessing tile outside array (value will not be used)
-                    //placeholder = col + 1 < Size ? Tiles[row, col + 1].State : false;
                     placeholder = Tiles[row, col + 1].State;
                     col++;
                 }
                 else if (end < col)
                 {
-                    //Have to account for accessing tile outside array (value will not be used)
-                    //placeholder = col >= 0 ? Tiles[row, (col - 1)].State : false;
                     placeholder = Tiles[row, col - 1].State;
                     col--;
                 }
