@@ -147,29 +147,33 @@ namespace NonoGramAI.Entities
                     case 1:
                         //because we are solving a square, if we had rectangles this would need to be random by #columns.
                         var col = row;
+                        var whiteSpace = new List<int>();
+                        var shadedSpace = new List<int>();
                         var shaded = 0;
                         for (var r = 0; r < original.Size; r++)
                             if (newGrid.Tiles[r, col].State)
+                            {
                                 shaded++;
+                                shadedSpace.Add(r);
+                            }
+                                
+                            else
+                                whiteSpace.Add(r);
+
                         //Column Too-Many: Look for a column with too many shaded values in it, select a shaded square. 
                         //       Within that shaded square's row, swap the shaded square with a non-shaded square.
+                        
                         if (shaded > _grid.TopHints[col].Hints.Sum())
                         {
-                            int i;
-                            do
-                                i = rnd.Next(original.Size);
-                            while (!newGrid.Tiles[row, i].State);
-                            TooManyTooFew(col, i, newGrid);
+                            if (whiteSpace.Any())
+                                TooManyTooFew(col, whiteSpace[rnd.Next(whiteSpace.Count)], newGrid);
                         }
                         //Column Too-Few: Look for a column with too few shaded values in it, select a non-shaded square. 
                         //       Within that non-shaded square's row, swap the non-shaded square with a shaded square.
                         else if (shaded < _grid.TopHints[col].Hints.Sum())
                         {
-                            int i;
-                            do
-                                i = rnd.Next(original.Size);
-                            while (newGrid.Tiles[row, i].State);
-                            TooManyTooFew(col, i, newGrid);
+                            if (shadedSpace.Any())
+                                TooManyTooFew(col, shadedSpace[rnd.Next(shadedSpace.Count)], newGrid);
                         }
                         
                         break;
