@@ -91,7 +91,7 @@ namespace NonoGramAI.Entities
         {
             var rnd = new Random();
             var tiles = Grid.GenerateNewTiles(alpha.Size);
-            var method = Settings.Default.CrossoverMethod == 3 ? rnd.Next(3) : Settings.Default.CrossoverMethod;
+            var method = rnd.Next(3);
 
             for (var row = 0; row < alpha.Size; row++)
             {
@@ -134,7 +134,7 @@ namespace NonoGramAI.Entities
         {
             var rnd = new Random();
             var newGrid = new Grid(original.Size,original.Tiles,original.TopHints,original.SideHints);
-            var method = Settings.Default.MutationMethod == 2 ? rnd.Next(2) : Settings.Default.MutationMethod;
+            var method = rnd.Next(2);
 
             for (var row = 0; row < original.Size; row++)
             {
