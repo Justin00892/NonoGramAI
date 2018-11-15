@@ -24,6 +24,7 @@ namespace NonoGramAI.Entities
 
         private static void RandomizeRow(Grid grid, int row, Random rnd)
         {
+            _grid = grid;
             for (var x = 0; x < grid.Size; x++)
                 grid.Tiles[row, x].State = false;
 
@@ -130,30 +131,77 @@ namespace NonoGramAI.Entities
             return newGrid;
         }
 
-        private static Grid Mutator(Grid original)
+        public static Grid Mutator(Grid original)
         {
             var rnd = new Random();
-            var newGrid = new Grid(original.Size,original.Tiles,original.TopHints,original.SideHints);
+            var mutation = new Grid(original.Size,original.Tiles,original.TopHints,original.SideHints);
+            List<int> whiteSpace;
             var method = rnd.Next(2);
+            int col, row = rnd.Next(_grid.Size);
 
-            for (var row = 0; row < original.Size; row++)
+            for (row = 0; row < original.Size; row++)
             {
                 switch (method)
                 {
                     case 0:
                         //Scoot: Go through a row using the hint values, and verify that the shaded squares match.
                         //       if there are too many shaded squares in a row, scoot them over to get the correct distribution.
-                        break;
+                        var tiles = mutation.GetConsecutiveList(row, true);
+                        var hints = mutation.SideHints[row].Hints;
+                        var optimumSwaps = new List<int>();
+                        whiteSpace = new List<int>();
+                        var position = 0;
+                        var counter = 0;
+                        int? swapCol = null;
+                        for (col = 0; col < mutation.Size; col++)
+                        {
+                            if (mutation.Tiles[row, col].State)
+                            {
+                                counter++;
+                                if (position < hints.Count)
+                                {
+                                    if (counter > hints[position] && swapCol == null)
+                                        swapCol = col;
+                                }
+                                else
+                                {
+                                    if (swapCol == null)
+                                        swapCol = col;
+                                }
+                                    
+                            }
+                            else if (counter > 0)
+                            {
+                                if (position >= hints.Count || (position < hints.Count && counter < hints[position]))
+                                    optimumSwaps.Add(col);
+                                position++;
+                                counter = 0;
+                            }
+                            if (counter == 0)
+                                whiteSpace.Add(col);
+                        }
+                        int swapEnd = _grid.Size - 1;
+                        if (swapCol != null)
+                        {
+                            swapEnd = optimumSwaps.Any() 
+                                    ? optimumSwaps[rnd.Next(optimumSwaps.Count)] 
+                                    : whiteSpace[rnd.Next(whiteSpace.Count)];
+                            mutation.Scoot(row, swapCol.Value, swapEnd);
+                        }
+                        
+
+                    break;
                     case 1:
                         //because we are solving a square, if we had rectangles this would need to be random by #columns.
+
                         //DO NOT need to swap in row = row, row now only refers to col
-                        var col = row;
-                        var whiteSpace = new List<int>();
+                        col = row;
+                        whiteSpace = new List<int>();
                         var shadedSpace = new List<int>();
                         for (var r = 0; r < original.Size; r++)
                         {
                             //For each shaded in a col
-                            if (newGrid.Tiles[r, col].State)
+                            if (mutation.Tiles[r, col].State)
                                 shadedSpace.Add(r);
                             else
                                 whiteSpace.Add(r);
@@ -170,15 +218,15 @@ namespace NonoGramAI.Entities
                         else if (shadedSpace.Count < sum)
                             row = whiteSpace[rnd.Next(whiteSpace.Count)];
                         if (shadedSpace.Count != sum)
-                            TooManyTooFew(col, row, newGrid);
+                            TooManyTooFew(col, row, mutation);
                         break;
                     default:
-                        RandomizeRow(newGrid, row,rnd);
+                        RandomizeRow(mutation, row,rnd);
                         break;
-                }
+               }
             }
-            newGrid.ReloadScore();
-            return newGrid;
+            mutation.ReloadScore();
+            return mutation;
         }
 
         private static void TooManyTooFew(int colNum, int rowNum, Grid grid)
