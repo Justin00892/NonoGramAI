@@ -11,7 +11,7 @@ namespace NonoGramAI.Entities
         public List<Hint> SideHints { get; }
         public int[] ColScores { get; set; }
         public int[] RowScores { get; set; }
-        public int Size { get; }
+        public int Size { get; set; }
         public int Score { get; set; }
         public int Stagnant { get; set; }
         public Dictionary<Grid, int> ExistingPop { get; set; }
@@ -22,8 +22,20 @@ namespace NonoGramAI.Entities
             TopHints = top;
             SideHints = side;
             Size = size;
-            ColScores = colScores ?? new int[Size];
-            RowScores = rowScores ?? new int[Size];
+            ColScores =  new int[Size];
+            RowScores =  new int[Size];
+            if (colScores != null)
+            {
+                for (var x = 0; x < Size; x++)
+                    ColScores[x] = colScores[x];
+            }
+            if (rowScores != null)
+            {
+                for (var x = 0; x < Size; x++)
+                    RowScores[x] = rowScores[x];
+            }
+
+
             WholeScore();
         }
 
@@ -62,7 +74,6 @@ namespace NonoGramAI.Entities
         //Scoots forward if end is greater than col and backwards if end is less than col
         public void Scoot(int row, int col, int end)
         {
-            var UpdateRows = new List<int>();
             var UpdateCols = new List<int>();
             //Start backwards scoot at the beginning on the consecutive tiles
             if (end < col)
@@ -93,8 +104,7 @@ namespace NonoGramAI.Entities
                     Tiles[row, col].State = temp;
             }
             UpdateCols.Add(end);
-            UpdateRows.Add(row);
-            UpdateRowColScore(UpdateRows, UpdateCols);
+            UpdateRowColScore(row, UpdateCols);
         }
 
         public List<int> GetConsecutiveList(int position, bool isRow)
@@ -157,26 +167,34 @@ namespace NonoGramAI.Entities
             Score = score;
         }
 
-        public void UpdateRowColScore(List<int> rows, List<int> cols)
+        public void UpdateRowColScore(int row, List<int> cols = null)
         {
-            foreach (var row in rows)
-                RowScores[row] = RowColScore(row, true);
-            foreach (var col in cols)
-                ColScores[col] = RowColScore(col, false);
+            RowScores[row] = RowColScore(row, true);
+            if (cols != null)
+            {
+                foreach (var col in cols)
+                    ColScores[col] = RowColScore(col, false);
+            }
+            WholeScore();
+        }
 
+        public void UpdateAllColumnScores()
+        {
+            for (int col = 0; col < Size; col++)
+            {
+                ColScores[col] = RowColScore(col, false);
+            }
             WholeScore();
         }
 
         public void RandomizeRow(int row, Random rnd)
         {
-            var UpdateRows = new List<int>();
             var UpdateCols = new List<int>();
             for (var x = 0; x < Size; x++)
             {
                 Tiles[row, x].State = false;
                 UpdateCols.Add(x);
             }
-            UpdateRows.Add(row);
 
             for (var x = 0; x < Shaded(row); x++)
             {
@@ -186,12 +204,11 @@ namespace NonoGramAI.Entities
                 else
                     Tiles[row, col].State = true;
             }
-            UpdateRowColScore(UpdateRows, UpdateCols);
+            UpdateRowColScore(row, UpdateCols);
         }
 
         public void TooManyTooFew(int colNum, int rowNum, Random rnd)
         {
-            var UpdateRows = new List<int>();
             var UpdateCols = new List<int>();
             var state = Tiles[rowNum, colNum].State;
             var possibleSwaps = new List<int>();
@@ -205,12 +222,20 @@ namespace NonoGramAI.Entities
                 var rndInt = possibleSwaps[rnd.Next(possibleSwaps.Count)];
                 Tiles[rowNum, colNum].State = !state;
                 Tiles[rowNum, rndInt].State = state;
-                UpdateRows.Add(rowNum);
                 UpdateCols.Add(colNum);
                 UpdateCols.Add(rndInt);
-                UpdateRowColScore(UpdateRows, UpdateCols);
+                UpdateRowColScore(rowNum, UpdateCols);
             }
 
+        }
+
+        public void Inheritance(Grid parent, int row)
+        {
+            for (var col = 0; col < parent.Size; col++)
+            {
+                Tiles[row, col] = parent.Tiles[row, col];
+                RowScores[row] = parent.RowScores[row];
+            }
         }
 
         public int RowColScore(int pos, bool isRow)

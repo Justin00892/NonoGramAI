@@ -8,8 +8,8 @@ namespace NonoGramAI.Entities
     public static class Algorithm
     {
         //private static Grid _grid;
-        private static Dictionary<Grid, int> _population;
-        private static Random rnd = new Random();
+        private static Dictionary<Grid, int> _population { get; set; }
+        private static Random rnd { get; set; }
 
         public static Grid Random(Grid grid)
         {
@@ -24,6 +24,7 @@ namespace NonoGramAI.Entities
         public static Grid Genetic(Grid grid)
         {
             _population = grid.ExistingPop ?? new Dictionary<Grid, int>(Settings.Default.Population);
+            rnd = rnd ?? new Random();
 
             if (grid.Stagnant >= 25)
                 NaturalSelection();
@@ -48,7 +49,7 @@ namespace NonoGramAI.Entities
                 do
                 {
                     child = Crossover(alpha, mate);
-                    var mutation = Mutator(child);                   
+                    var mutation = Mutator(child, rnd);                   
                     child = child.Score > mutation.Score ? child : mutation;
                 } while (_population.ContainsKey(child));
                 _population.Add(child, child.Score);               
@@ -80,6 +81,8 @@ namespace NonoGramAI.Entities
             var tiles = Grid.GenerateNewTiles(alpha.Size);
             var method = rnd.Next(3);
 
+            var newGrid = new Grid(alpha.Size, tiles, alpha.TopHints, alpha.SideHints);
+
             for (var row = 0; row < alpha.Size; row++)
             {
                 Grid parent;
@@ -106,27 +109,23 @@ namespace NonoGramAI.Entities
                         parent = alpha;
                         break;
                 }
-
-                for (var col = 0; col < parent.Size; col++)
-                    tiles[row, col] = parent.Tiles[row, col];
+                newGrid.Inheritance(parent, row);
             }
-
-            var newGrid = new Grid(alpha.Size, tiles, alpha.TopHints, alpha.SideHints, alpha.ColScores, alpha.RowScores);
-            //if (newGrid.Score == alpha.Score || newGrid.Score == mate.Score)
-            //    newGrid = Random(newGrid);
+            newGrid.UpdateAllColumnScores();
+            
             return newGrid;
         }
 
-        private static Grid Mutator(Grid original)
+        private static Grid Mutator(Grid original, Random rnd)
         {
             var mutation = new Grid(original.Size,original.Tiles,original.TopHints,original.SideHints, original.ColScores, original.RowScores);
             var updateCols = new List<int>();
             var updateRows = new List<int>();
             var method = rnd.Next(2);
-            int row;
+            int row = rnd.Next(original.Size);
 
-            for (row = 0; row < original.Size; row++)
-            {
+            //for (row = 0; row < original.Size; row++)
+            //{
                 List<int> whiteSpace;
                 int col;
                 switch (method)
@@ -210,8 +209,15 @@ namespace NonoGramAI.Entities
                     default:
                         mutation.RandomizeRow(row,rnd);
                         break;
-               }
+              // }
             }
+            int count = 0; 
+            while (mutation.Score < original.Score || count > 25)
+            {
+                count++;
+                mutation = Mutator(mutation, rnd);
+            }
+                
             return mutation;
         }
 
