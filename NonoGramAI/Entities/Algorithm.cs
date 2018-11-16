@@ -135,7 +135,8 @@ namespace NonoGramAI.Entities
         private static Grid Mutator(Grid original)
         {
             var rnd = new Random();
-            var mutation = new Grid(original.Size,original.Tiles,original.TopHints,original.SideHints, original.Solution);
+            var newTiles = Grid.CopyTiles(original);
+            var mutation = new Grid(original.Size,newTiles,original.TopHints,original.SideHints, original.Solution);
             var method = rnd.Next(2);
 
             for (var row = 0; row < original.Size; row++)
