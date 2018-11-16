@@ -35,7 +35,7 @@ namespace NonoGramAI.Entities
                 for(var j = 0; j < size; j++)
                     tiles[i, j] = bestRow.Tiles[j];
             }
-            var finalGrid = new Grid(size, tiles,newGrid.TopHints,newGrid.SideHints);
+            var finalGrid = new Grid(size, tiles,newGrid.TopHints,newGrid.SideHints, newGrid.Solution);
             return finalGrid.Score > newGrid.Score ? finalGrid : newGrid;
         }
     }

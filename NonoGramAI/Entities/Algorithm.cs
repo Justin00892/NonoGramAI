@@ -14,11 +14,10 @@ namespace NonoGramAI.Entities
         {
             var rnd = new Random();
             var tiles = Grid.GenerateNewTiles(grid.Size);
-            var newGrid = new Grid(grid.Size, tiles, grid.TopHints, grid.SideHints);
+            var newGrid = new Grid(grid.Size, tiles, grid.TopHints, grid.SideHints, grid.Solution);
             for (var row = 0; row < grid.Size; row++)
                 RandomizeRow(newGrid, row, rnd);
 
-            newGrid.ReloadScore();
             return newGrid;
         }
 
@@ -109,9 +108,9 @@ namespace NonoGramAI.Entities
                         break;
                     case 2:
                         //Use any rows with perfect fitness, else random
-                        if (alpha.RowColScore(row,true) > _grid.SideHints[row].Hints.Count)
+                        if (alpha.GetRowScore(row) == _grid.SideHints[row].Hints.Count)
                             parent = alpha;
-                        else if (mate.RowColScore(row,true) > _grid.SideHints[row].Hints.Count)
+                        else if (mate.GetRowScore(row) == _grid.SideHints[row].Hints.Count)
                             parent = mate;
                         else
                             parent = rnd.NextDouble() > 0.5 ? alpha : mate;
@@ -125,28 +124,28 @@ namespace NonoGramAI.Entities
                     tiles[row, col] = parent.Tiles[row, col];
             }
 
-            var newGrid = new Grid(alpha.Size, tiles, alpha.TopHints, alpha.SideHints);
+            var newGrid = new Grid(alpha.Size, tiles, alpha.TopHints, alpha.SideHints, alpha.Solution);
             if (newGrid.Score == alpha.Score || newGrid.Score == mate.Score)
                 newGrid = Random(newGrid);
             return newGrid;
         }
 
-        public static Grid Mutator(Grid original)
+        private static Grid Mutator(Grid original)
         {
             var rnd = new Random();
-            var mutation = new Grid(original.Size,original.Tiles,original.TopHints,original.SideHints);
-            List<int> whiteSpace;
+            var mutation = new Grid(original.Size,original.Tiles,original.TopHints,original.SideHints, original.Solution);
             var method = rnd.Next(2);
-            int col, row = rnd.Next(_grid.Size);
 
-            for (row = 0; row < original.Size; row++)
+            for (var row = 0; row < original.Size; row++)
             {
+                List<int> whiteSpace;
+                int col;
                 switch (method)
                 {
                     case 0:
                         //Scoot: Go through a row using the hint values, and verify that the shaded squares match.
                         //       if there are too many shaded squares in a row, scoot them over to get the correct distribution.
-                        var tiles = mutation.GetConsecutiveList(row, true);
+                        //var tiles = mutation.GetConsecutiveList(row, true);
                         var hints = mutation.SideHints[row].Hints;
                         var optimumSwaps = new List<int>();
                         whiteSpace = new List<int>();
@@ -180,10 +179,9 @@ namespace NonoGramAI.Entities
                             if (counter == 0)
                                 whiteSpace.Add(col);
                         }
-                        int swapEnd = _grid.Size - 1;
                         if (swapCol != null)
                         {
-                            swapEnd = optimumSwaps.Any() 
+                            var swapEnd = optimumSwaps.Any() 
                                     ? optimumSwaps[rnd.Next(optimumSwaps.Count)] 
                                     : whiteSpace[rnd.Next(whiteSpace.Count)];
                             mutation.Scoot(row, swapCol.Value, swapEnd);
@@ -225,7 +223,6 @@ namespace NonoGramAI.Entities
                         break;
                }
             }
-            mutation.ReloadScore();
             return mutation;
         }
 
@@ -234,19 +231,17 @@ namespace NonoGramAI.Entities
             var rnd = new Random();
             var state = grid.Tiles[rowNum, colNum].State;
             var possibleSwaps = new List<int>();
-            int rndInt;
-            for (int col = 0; col < grid.Size; col++)
+            for (var col = 0; col < grid.Size; col++)
             {
                 if (grid.Tiles[rowNum, col].State != state)
                     possibleSwaps.Add(col);
             }
-            if (possibleSwaps.Any())
-            {
-                rndInt = possibleSwaps[rnd.Next(possibleSwaps.Count)];
-                grid.Tiles[rowNum, colNum].State = !state;
-                grid.Tiles[rowNum, rndInt].State = state;
-            }
-            
+
+            if (!possibleSwaps.Any()) return;
+            var rndInt = possibleSwaps[rnd.Next(possibleSwaps.Count)];
+            grid.Tiles[rowNum, colNum].State = !state;
+            grid.Tiles[rowNum, rndInt].State = state;
+
         }
     }
 }

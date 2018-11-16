@@ -31,6 +31,7 @@ namespace NonoGramAI
             }
             var topHints = new List<Hint>();
             var sideHints = new List<Hint>();
+            var solution = new List<List<bool>>();
             using (var reader = new StreamReader(openFileDialog.FileName))
             {
                 //skips top line
@@ -54,7 +55,7 @@ namespace NonoGramAI
                 }
 
                 hintString = reader.ReadLine();
-                while (hintString != null)
+                while (hintString != "Solution" && hintString != null)
                 {
                     var hintStringList = hintString.Split(',').ToList();
                     var hintList = new List<int>();
@@ -63,6 +64,17 @@ namespace NonoGramAI
 
                     var hint = new Hint(hintList, false);
                     sideHints.Add(hint);
+                    hintString = reader.ReadLine();
+                }
+
+                hintString = reader.ReadLine();
+                while (hintString != null)
+                {
+                    var rowList = hintString.Split(',').ToList();
+                    var row = new List<bool>();
+                    foreach (var entry in rowList)
+                        row.Add(entry != "0");
+                    solution.Add(row);
                     hintString = reader.ReadLine();
                 }
             }
@@ -113,7 +125,7 @@ namespace NonoGramAI
                 sideListPanel.SetRow(hint, i);
             }
 
-            _grid = new Grid(size,tiles,topHints,sideHints);
+            _grid = new Grid(size,tiles,topHints,sideHints,solution);
 
             chooseFileButton.Dispose();
             runAIButton.Show();
@@ -127,7 +139,7 @@ namespace NonoGramAI
                     tile.State = _grid.GetTiles()
                         .First(t => t.X == tile.X && t.Y == tile.Y).State;
 
-            scoreLabel.Text = "Score: " + _grid.WholeScore();
+            scoreLabel.Text = "Score: " + _grid.Score;
             
         }
 
@@ -170,8 +182,6 @@ namespace NonoGramAI
                 _grid = grid;
                 UpdateDisplay();
                 genLabel.Text = "Gen: " + i;
-
-                await Task.Delay(1000);
             }
 
             timer.Stop();
