@@ -9,18 +9,22 @@ namespace NonoGramAI.Entities
         public Tile[,] Tiles { get; }
         public List<Hint> TopHints { get; }
         public List<Hint> SideHints { get; }
+        public int[] ColScores { get; set; }
+        public int[] RowScores { get; set; }
         public int Size { get; }
         public int Score { get; set; }
         public int Stagnant { get; set; }
         public Dictionary<Grid, int> ExistingPop { get; set; }
 
-        public Grid(int size, Tile[,] tiles, List<Hint> top, List<Hint> side)
+        public Grid(int size, Tile[,] tiles, List<Hint> top, List<Hint> side, int[] colScores = null, int[] rowScores = null)
         {
             Tiles = tiles;
             TopHints = top;
             SideHints = side;
             Size = size;
-            Score = WholeScore();
+            ColScores = colScores ?? new int[Size];
+            RowScores = rowScores ?? new int[Size];
+            WholeScore();
         }
 
         public int Shaded(int row)
@@ -48,14 +52,18 @@ namespace NonoGramAI.Entities
             return tiles;
         }
 
-        public void ReloadScore()
+        public void InitScore()
         {
-            Score = WholeScore();
+            for (int x = 0; x < Size; x++)
+                ColScores[x] = RowColScore(x, false);
+            
         }
 
         //Scoots forward if end is greater than col and backwards if end is less than col
         public void Scoot(int row, int col, int end)
         {
+            var UpdateRows = new List<int>();
+            var UpdateCols = new List<int>();
             //Start backwards scoot at the beginning on the consecutive tiles
             if (end < col)
             {
@@ -67,8 +75,10 @@ namespace NonoGramAI.Entities
             bool placeholder = Tiles[row, col].State;
             while (col != end)
             {
+
                 Tiles[row, col].State = temp;
                 temp = placeholder;
+                UpdateCols.Add(col);
                 if (end > col)
                 {
                     placeholder = Tiles[row, col + 1].State;
@@ -82,7 +92,9 @@ namespace NonoGramAI.Entities
                 if (col == end)
                     Tiles[row, col].State = temp;
             }
-
+            UpdateCols.Add(end);
+            UpdateRows.Add(row);
+            UpdateRowColScore(UpdateRows, UpdateCols);
         }
 
         public List<int> GetConsecutiveList(int position, bool isRow)
@@ -136,57 +148,75 @@ namespace NonoGramAI.Entities
             return list;
         }
 
-        public int WholeScore()
+        public void WholeScore()
         {
             var score = 0;
-            for (var i = 0; i < Size; i++)
-            {    
-                //checks columns
-                var tempScore = RowColScore(i, false);            
-                score += tempScore;
+            score = +ColScores.Sum();
+            score = +RowScores.Sum();
 
-                //checks rows
-                tempScore = RowColScore(i, true);                   
-                score += tempScore;
+            Score = score;
+        }
+
+        public void UpdateRowColScore(List<int> rows, List<int> cols)
+        {
+            foreach (var row in rows)
+                RowScores[row] = RowColScore(row, true);
+            foreach (var col in cols)
+                ColScores[col] = RowColScore(col, false);
+
+            WholeScore();
+        }
+
+        public void RandomizeRow(int row, Random rnd)
+        {
+            var UpdateRows = new List<int>();
+            var UpdateCols = new List<int>();
+            for (var x = 0; x < Size; x++)
+            {
+                Tiles[row, x].State = false;
+                UpdateCols.Add(x);
+            }
+            UpdateRows.Add(row);
+
+            for (var x = 0; x < Shaded(row); x++)
+            {
+                var col = rnd.Next(Size);
+                if (Tiles[row, col].State)
+                    x--;
+                else
+                    Tiles[row, col].State = true;
+            }
+            UpdateRowColScore(UpdateRows, UpdateCols);
+        }
+
+        public void TooManyTooFew(int colNum, int rowNum, Random rnd)
+        {
+            var UpdateRows = new List<int>();
+            var UpdateCols = new List<int>();
+            var state = Tiles[rowNum, colNum].State;
+            var possibleSwaps = new List<int>();
+            for (var col = 0; col < Size; col++)
+            {
+                if (Tiles[rowNum, col].State != state)
+                    possibleSwaps.Add(col);
+            }
+            if (possibleSwaps.Any())
+            {
+                var rndInt = possibleSwaps[rnd.Next(possibleSwaps.Count)];
+                Tiles[rowNum, colNum].State = !state;
+                Tiles[rowNum, rndInt].State = state;
+                UpdateRows.Add(rowNum);
+                UpdateCols.Add(colNum);
+                UpdateCols.Add(rndInt);
+                UpdateRowColScore(UpdateRows, UpdateCols);
             }
 
-            return score;
         }
 
         public int RowColScore(int pos, bool isRow)
         {
-            var consecutiveList = new List<int>();
-            var count = 0;
-            List<int> hintList; 
-            if (isRow)
-            {
-                hintList = SideHints[pos].Hints;
-                for (var col = 0; col < Size; col++)
-                {
-                    if (Tiles[pos, col].State)
-                        count++;
-                    else if (count > 0)
-                    {
-                        consecutiveList.Add(count);
-                        count = 0;
-                    }
-                }
-            }
-            else
-            {
-                hintList = TopHints[pos].Hints;
-                for (var row = 0; row < Size; row++)
-                {
-                    if (Tiles[row, pos].State)
-                        count++;
-                    else if (count > 0)
-                    {
-                        consecutiveList.Add(count);
-                        count = 0;
-                    }
-                }
-            }
-            if (count > 0) consecutiveList.Add(count);
+            var consecutiveList = GetConsecutiveList(pos, isRow);
+            var hintList = isRow ? SideHints[pos].Hints : TopHints[pos].Hints; 
 
             var tempScore = 0;
             if (consecutiveList.Count > hintList.Count) return tempScore;
@@ -207,10 +237,10 @@ namespace NonoGramAI.Entities
             return id.GetHashCode();
         }
 
-        public override bool Equals(object obj)
-        {
-            if (!(obj is Grid tmp)) return false;
-            return GetHashCode() == tmp.GetHashCode();
-        }
+        //public override bool Equals(object obj)
+        //{
+        //    if (!(obj is Grid tmp)) return false;
+        //    return GetHashCode() == tmp.GetHashCode();
+        //}
     }
 }

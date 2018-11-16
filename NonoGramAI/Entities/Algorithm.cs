@@ -7,7 +7,7 @@ namespace NonoGramAI.Entities
 {
     public static class Algorithm
     {
-        private static Grid _grid;
+        //private static Grid _grid;
         private static Dictionary<Grid, int> _population;
         private static Random rnd = new Random();
 
@@ -16,26 +16,9 @@ namespace NonoGramAI.Entities
             var tiles = Grid.GenerateNewTiles(grid.Size);
             var newGrid = new Grid(grid.Size, tiles, grid.TopHints, grid.SideHints);
             for (var row = 0; row < grid.Size; row++)
-                RandomizeRow(newGrid, row, rnd);
-
-            newGrid.ReloadScore();
+                newGrid.RandomizeRow(row, rnd);
+            newGrid.InitScore();
             return newGrid;
-        }
-
-        private static void RandomizeRow(Grid grid, int row, Random rnd)
-        {
-            _grid = grid;
-            for (var x = 0; x < grid.Size; x++)
-                grid.Tiles[row, x].State = false;
-
-            for (var x = 0; x < grid.Shaded(row); x++)
-            {
-                var col = rnd.Next(_grid.Size);
-                if (grid.Tiles[row, col].State)
-                    x--;
-                else
-                    grid.Tiles[row, col].State = true;
-            }
         }
 
         public static Grid Genetic(Grid grid)
@@ -55,16 +38,18 @@ namespace NonoGramAI.Entities
             }
             NaturalSelection();
             var alpha = _population.OrderByDescending(g => g.Value).First().Key;
-            while (_population.Count < Settings.Default.Population)
+            while (_population.Count < Settings.Default.Population )
             {
+                if (!_population.Where(p => !Equals(p.Key, alpha)).Any())
+                    break;
                 var mate = _population.Where(p => !Equals(p.Key, alpha))
-                    .OrderBy(p => rnd.Next()).First().Key;
+                    .OrderBy(p => rnd.Next()).FirstOrDefault().Key;
                 Grid child;
                 do
                 {
                     child = Crossover(alpha, mate);
-                    child = Mutator(child);                   
-                    //child = child.Score > mutation.Score ? child : mutation;
+                    var mutation = Mutator(child);                   
+                    child = child.Score > mutation.Score ? child : mutation;
                 } while (_population.ContainsKey(child));
                 _population.Add(child, child.Score);               
             }
@@ -77,8 +62,10 @@ namespace NonoGramAI.Entities
 
         private static void NaturalSelection()
         {
-            var avgScore = _population.Values.Average();
-            var temp = _population.Where(p => p.Value > avgScore).ToList();
+            //var avgScore = _population.Values.Average();
+            var temp = _population.OrderByDescending(g => g.Value)
+                                    .Take(Settings.Default.Population / 2)
+                                    .ToList();
             _population.Clear();
             foreach (var entry in temp)
             {
@@ -108,9 +95,9 @@ namespace NonoGramAI.Entities
                         break;
                     case 2:
                         //Use any rows with perfect fitness, else random
-                        if (alpha.RowColScore(row,true) > _grid.SideHints[row].Hints.Count)
+                        if (alpha.RowScores[row] > alpha.SideHints[row].Hints.Count)
                             parent = alpha;
-                        else if (mate.RowColScore(row,true) > _grid.SideHints[row].Hints.Count)
+                        else if (mate.RowScores[row] > mate.SideHints[row].Hints.Count)
                             parent = mate;
                         else
                             parent = rnd.NextDouble() > 0.5 ? alpha : mate;
@@ -124,15 +111,17 @@ namespace NonoGramAI.Entities
                     tiles[row, col] = parent.Tiles[row, col];
             }
 
-            var newGrid = new Grid(alpha.Size, tiles, alpha.TopHints, alpha.SideHints);
-            if (newGrid.Score == alpha.Score || newGrid.Score == mate.Score)
-                newGrid = Random(newGrid);
+            var newGrid = new Grid(alpha.Size, tiles, alpha.TopHints, alpha.SideHints, alpha.ColScores, alpha.RowScores);
+            //if (newGrid.Score == alpha.Score || newGrid.Score == mate.Score)
+            //    newGrid = Random(newGrid);
             return newGrid;
         }
 
         private static Grid Mutator(Grid original)
         {
-            var mutation = new Grid(original.Size,original.Tiles,original.TopHints,original.SideHints);
+            var mutation = new Grid(original.Size,original.Tiles,original.TopHints,original.SideHints, original.ColScores, original.RowScores);
+            var updateCols = new List<int>();
+            var updateRows = new List<int>();
             var method = rnd.Next(2);
             int row;
 
@@ -208,7 +197,7 @@ namespace NonoGramAI.Entities
                         //Column Too-Many: Look for a column with too many shaded values in it, select a shaded square. 
                         //       Within that shaded square's row, swap the shaded square with a non-shaded square.
 
-                        var sum = _grid.TopHints[col].Hints.Sum();
+                        var sum = original.TopHints[col].Hints.Sum();
                         if (shadedSpace.Count > sum)
                             row = shadedSpace[rnd.Next(shadedSpace.Count)];
                         //Column Too-Few: Look for a column with too few shaded values in it, select a non-shaded square. 
@@ -216,33 +205,16 @@ namespace NonoGramAI.Entities
                         else if (shadedSpace.Count < sum)
                             row = whiteSpace[rnd.Next(whiteSpace.Count)];
                         if (shadedSpace.Count != sum)
-                            TooManyTooFew(col, row, mutation);
+                            mutation.TooManyTooFew(col, row, rnd);
                         break;
                     default:
-                        RandomizeRow(mutation, row,rnd);
+                        mutation.RandomizeRow(row,rnd);
                         break;
                }
             }
-            mutation.ReloadScore();
             return mutation;
         }
 
-        private static void TooManyTooFew(int colNum, int rowNum, Grid grid)
-        {
-            var state = grid.Tiles[rowNum, colNum].State;
-            var possibleSwaps = new List<int>();
-            for (var col = 0; col < grid.Size; col++)
-            {
-                if (grid.Tiles[rowNum, col].State != state)
-                    possibleSwaps.Add(col);
-            }
-            if (possibleSwaps.Any())
-            {
-                var rndInt = possibleSwaps[rnd.Next(possibleSwaps.Count)];
-                grid.Tiles[rowNum, colNum].State = !state;
-                grid.Tiles[rowNum, rndInt].State = state;
-            }
-            
-        }
+        
     }
 }

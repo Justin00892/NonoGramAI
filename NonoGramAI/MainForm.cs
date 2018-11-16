@@ -127,7 +127,7 @@ namespace NonoGramAI
                     tile.State = _grid.GetTiles()
                         .First(t => t.X == tile.X && t.Y == tile.Y).State;
 
-            scoreLabel.Text = "Score: " + _grid.WholeScore();
+            scoreLabel.Text = "Score: " + _grid.Score;
             
         }
 
