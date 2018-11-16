@@ -79,12 +79,14 @@ namespace NonoGramAI.Entities
 
         private static void NaturalSelection()
         {
-            var casualities = (_population.OrderByDescending(g => g.Value)
-                                    .Skip(Settings.Default.Population / 2)
-                                    .ToList());
-
-            foreach (var casuality in casualities)
-                _population.Remove(casuality.Key);
+            var avgScore = _population.Values.Average();
+            var temp = _population.Where(p => p.Value > avgScore).ToList();
+            _population.Clear();
+            foreach (var entry in temp)
+            {
+                if(!_population.ContainsKey(entry.Key))
+                    _population.Add(entry.Key,entry.Value);
+            }
         }
 
 
@@ -131,22 +133,23 @@ namespace NonoGramAI.Entities
             return newGrid;
         }
 
-        public static Grid Mutator(Grid original)
+        private static Grid Mutator(Grid original)
         {
             var rnd = new Random();
             var mutation = new Grid(original.Size,original.Tiles,original.TopHints,original.SideHints);
-            List<int> whiteSpace;
             var method = rnd.Next(2);
-            int col, row = rnd.Next(_grid.Size);
+            int row;
 
             for (row = 0; row < original.Size; row++)
             {
+                List<int> whiteSpace;
+                int col;
                 switch (method)
                 {
                     case 0:
                         //Scoot: Go through a row using the hint values, and verify that the shaded squares match.
                         //       if there are too many shaded squares in a row, scoot them over to get the correct distribution.
-                        var tiles = mutation.GetConsecutiveList(row, true);
+                        //var tiles = mutation.GetConsecutiveList(row, true);
                         var hints = mutation.SideHints[row].Hints;
                         var optimumSwaps = new List<int>();
                         whiteSpace = new List<int>();
@@ -180,10 +183,9 @@ namespace NonoGramAI.Entities
                             if (counter == 0)
                                 whiteSpace.Add(col);
                         }
-                        int swapEnd = _grid.Size - 1;
                         if (swapCol != null)
                         {
-                            swapEnd = optimumSwaps.Any() 
+                            var swapEnd = optimumSwaps.Any() 
                                     ? optimumSwaps[rnd.Next(optimumSwaps.Count)] 
                                     : whiteSpace[rnd.Next(whiteSpace.Count)];
                             mutation.Scoot(row, swapCol.Value, swapEnd);
@@ -234,15 +236,14 @@ namespace NonoGramAI.Entities
             var rnd = new Random();
             var state = grid.Tiles[rowNum, colNum].State;
             var possibleSwaps = new List<int>();
-            int rndInt;
-            for (int col = 0; col < grid.Size; col++)
+            for (var col = 0; col < grid.Size; col++)
             {
                 if (grid.Tiles[rowNum, col].State != state)
                     possibleSwaps.Add(col);
             }
             if (possibleSwaps.Any())
             {
-                rndInt = possibleSwaps[rnd.Next(possibleSwaps.Count)];
+                var rndInt = possibleSwaps[rnd.Next(possibleSwaps.Count)];
                 grid.Tiles[rowNum, colNum].State = !state;
                 grid.Tiles[rowNum, rndInt].State = state;
             }
