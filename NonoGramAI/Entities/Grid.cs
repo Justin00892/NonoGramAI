@@ -48,6 +48,21 @@ namespace NonoGramAI.Entities
             return tiles;
         }
 
+        public static Tile[,] CopyTiles(Grid org)
+        {
+            var tiles = new Tile[org.Size, org.Size];
+            for (var row = 0; row < org.Size; row++)
+            {
+                for (var col = 0; col < org.Size; col++)
+                {
+                    var tile = new Tile(row, col);
+                    tiles[row, col] = tile;
+                    tile.State = org.Tiles[row, col].State;
+                }
+            }
+            return tiles;
+        }
+
         //Scoots forward if end is greater than col and backwards if end is less than col
         public void Scoot(int row, int col, int end)
         {
