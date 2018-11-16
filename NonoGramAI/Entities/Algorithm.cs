@@ -9,10 +9,10 @@ namespace NonoGramAI.Entities
     {
         private static Grid _grid;
         private static Dictionary<Grid, int> _population;
+        private static Random rnd = new Random();
 
         public static Grid Random(Grid grid)
         {
-            var rnd = new Random();
             var tiles = Grid.GenerateNewTiles(grid.Size);
             var newGrid = new Grid(grid.Size, tiles, grid.TopHints, grid.SideHints);
             for (var row = 0; row < grid.Size; row++)
@@ -40,18 +40,16 @@ namespace NonoGramAI.Entities
 
         public static Grid Genetic(Grid grid)
         {
-            _grid = grid;
-            var rnd = new Random();
-            _population = _grid.ExistingPop ?? new Dictionary<Grid, int>(Settings.Default.Population);
+            _population = grid.ExistingPop ?? new Dictionary<Grid, int>(Settings.Default.Population);
 
-            if (_grid.Stagnant >= 25)
+            if (grid.Stagnant >= 25)
                 NaturalSelection();
 
             while (_population.Count < Settings.Default.Population)
             {
                 Grid newGrid;
                 do
-                    newGrid = Random(_grid);
+                    newGrid = Random(grid);
                 while (_population.ContainsKey(newGrid));
                 _population.Add(newGrid, newGrid.Score);
             }
@@ -92,7 +90,6 @@ namespace NonoGramAI.Entities
 
         private static Grid Crossover(Grid alpha, Grid mate)
         {
-            var rnd = new Random();
             var tiles = Grid.GenerateNewTiles(alpha.Size);
             var method = rnd.Next(3);
 
@@ -135,7 +132,6 @@ namespace NonoGramAI.Entities
 
         private static Grid Mutator(Grid original)
         {
-            var rnd = new Random();
             var mutation = new Grid(original.Size,original.Tiles,original.TopHints,original.SideHints);
             var method = rnd.Next(2);
             int row;
@@ -233,7 +229,6 @@ namespace NonoGramAI.Entities
 
         private static void TooManyTooFew(int colNum, int rowNum, Grid grid)
         {
-            var rnd = new Random();
             var state = grid.Tiles[rowNum, colNum].State;
             var possibleSwaps = new List<int>();
             for (var col = 0; col < grid.Size; col++)
