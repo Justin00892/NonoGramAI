@@ -78,12 +78,14 @@ namespace NonoGramAI.Entities
 
         private static void NaturalSelection()
         {
-            var casualities = (_population.OrderByDescending(g => g.Value)
-                                    .Skip(Settings.Default.Population / 2)
-                                    .ToList());
-
-            foreach (var casuality in casualities)
-                _population.Remove(casuality.Key);
+            var avgScore = _population.Values.Average();
+            var temp = _population.Where(p => p.Value > avgScore).ToList();
+            _population.Clear();
+            foreach (var entry in temp)
+            {
+                if(!_population.ContainsKey(entry.Key))
+                    _population.Add(entry.Key,entry.Value);
+            }
         }
 
 
