@@ -8,7 +8,7 @@ namespace NonoGramAI.Entities
     public static class Algorithm
     {
         private static Grid _grid;
-        private static Dictionary<Grid, int> _population;
+        private static Dictionary<Grid, double> _population;
 
         public static Grid Random(Grid grid)
         {
@@ -41,7 +41,7 @@ namespace NonoGramAI.Entities
         {
             _grid = grid;
             var rnd = new Random();
-            _population = _grid.ExistingPop ?? new Dictionary<Grid, int>(Settings.Default.Population);
+            _population = _grid.ExistingPop ?? new Dictionary<Grid, double>(Settings.Default.Population);
 
             if (_grid.Stagnant >= 25)
                 NaturalSelection();
@@ -56,10 +56,10 @@ namespace NonoGramAI.Entities
             }
             NaturalSelection();
             var alpha = _population.OrderByDescending(g => g.Value).First().Key;
+            _population.Remove(alpha);
             while (_population.Count < Settings.Default.Population)
             {
-                var mate = _population.Where(p => !Equals(p.Key, alpha))
-                    .OrderBy(p => rnd.Next()).First().Key;
+                var mate = _population.OrderBy(p => rnd.Next()).First().Key;
                 Grid child;
                 do
                 {
@@ -72,7 +72,7 @@ namespace NonoGramAI.Entities
 
             var finalGrid = _population.OrderByDescending(p => p.Value).First().Key;
             finalGrid.ExistingPop = _population;
-            finalGrid.Stagnant++;
+
             return finalGrid;
         }
 
@@ -110,9 +110,9 @@ namespace NonoGramAI.Entities
                         break;
                     case 2:
                         //Use any rows with perfect fitness, else random
-                        if (alpha.GetRowScore(row) == _grid.SideHints[row].Hints.Count)
+                        if (alpha.GetRowScore(row) > _grid.SideHints[row].Hints.Count)
                             parent = alpha;
-                        else if (mate.GetRowScore(row) == _grid.SideHints[row].Hints.Count)
+                        else if (mate.GetRowScore(row) > _grid.SideHints[row].Hints.Count)
                             parent = mate;
                         else
                             parent = rnd.NextDouble() > 0.5 ? alpha : mate;

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -95,16 +96,17 @@ namespace NonoGramAI
                 for (var j = 0; j < size; j++)
                 {
                     tiles[i, j] = new Tile(i, j);
+                    var panel = tiles[i, j].getTilePanel();
                     var x = i;
                     var y = j;
-                    tiles[i, j].Click += (sender1, args) =>
+                    panel.Click += (o, args) =>
                     {
-                        tiles[x, y].State = !tiles[x, y].State;
-                        UpdateDisplay();
+                        _grid.Tiles[x, y].State = !_grid.Tiles[x, y].State;
+                        panel.BackColor = _grid.Tiles[x, y].State ? Color.Black : Color.White;
                     };
-                    gridPanel.Controls.Add(tiles[i, j]);
-                    gridPanel.SetRow(tiles[i, j], i);
-                    gridPanel.SetColumn(tiles[i, j], j);
+                    gridPanel.Controls.Add(panel);
+                    gridPanel.SetRow(panel, i);
+                    gridPanel.SetColumn(panel, j);
                 }
             }
 
@@ -134,10 +136,14 @@ namespace NonoGramAI
 
         private void UpdateDisplay()
         {
-            foreach (var obj in gridPanel.Controls)
-                if (obj is Tile tile)
-                    tile.State = _grid.GetTiles()
-                        .First(t => t.X == tile.X && t.Y == tile.Y).State;
+            for (var i = 0; i < _grid.Size; i++)
+            {
+                for (var j = 0; j < _grid.Size; j++)
+                {
+                    var panel = gridPanel.GetControlFromPosition(j, i);
+                    panel.BackColor = _grid.Tiles[i, j].State ? Color.Black : Color.White;
+                }
+            }
 
             scoreLabel.Text = "Score: " + _grid.Score;
             
@@ -178,9 +184,15 @@ namespace NonoGramAI
             for (var i = 0; i < _settings.Generations; i++)
             {
                 var grid = await Task<Grid>.Factory.StartNew(() => Algorithm.Genetic(_grid));
-                //if (grid.Score > _grid.Score) 
-                _grid = grid;
-                UpdateDisplay();
+
+                if (grid.Score > _grid.Score)
+                {
+                    _grid = grid;
+                    UpdateDisplay();
+                }
+                else
+                    _grid.Stagnant++;
+
                 genLabel.Text = "Gen: " + i;
             }
 

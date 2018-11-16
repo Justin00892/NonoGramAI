@@ -9,10 +9,10 @@ namespace NonoGramAI.Entities
         public List<Hint> TopHints { get; }
         public List<Hint> SideHints { get; }
         public int Size { get; }
-        public int Score => GetScore();
+        public double Score => GetScore();
         public int Stagnant { get; set; }
-        public List<List<bool>> Solution { get; set; }
-        public Dictionary<Grid, int> ExistingPop { get; set; }
+        public List<List<bool>> Solution { get; }
+        public Dictionary<Grid, double> ExistingPop { get; set; }
 
         public Grid(int size, Tile[,] tiles, List<Hint> top, List<Hint> side, List< List<bool>> solution)
         {
@@ -131,9 +131,9 @@ namespace NonoGramAI.Entities
             return list;
         }
 
-        private int GetScore()
+        private double GetScore()
         {
-            var score = 0;
+            var score = 0.0;
 
             for (var i = 0; i < Size; i++)
                 score += GetRowScore(i);
@@ -141,21 +141,27 @@ namespace NonoGramAI.Entities
             return score;
         }
 
-        public int GetRowScore(int row)
+        public double GetRowScore(int row)
         {
-            var score = 0;
+            var score = 0.0;
 
             for (var j = 0; j < Size; j++)
                 if (Tiles[row, j].State == Solution[row][j] && Tiles[row, j].State)
                     score++;
+            if (score == SideHints[row].Hints.Sum())
+                score++;
+
 
             return score;
         }
 
         public override int GetHashCode()
         {
-            var id = Tiles.Cast<Tile>()
-                .Aggregate("", (current, tile) => current + (tile.State ? 1 : 0));
+            var id = "";
+            for (var i = 0; i < Size; i++)
+            {
+                id += GetRowScore(i);
+            }
             return id.GetHashCode();
         }
 
