@@ -1,26 +1,29 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace NonoGramAI.Entities
 {
     public class Grid
     {
-        public Tile[,] Tiles { get; }
+        public List<List<Tile>> Tiles { get; }
         public List<Hint> TopHints { get; }
         public List<Hint> SideHints { get; }
         public int Size { get; }
-        public double Score => GetScore();
+        public int Score => GetScore();
         public int Stagnant { get; set; }
         public List<List<bool>> Solution { get; }
-        public Dictionary<Grid, double> ExistingPop { get; set; }
+        public Dictionary<Grid, int> ExistingPop { get; set; }
 
-        public Grid(int size, Tile[,] tiles, List<Hint> top, List<Hint> side, List< List<bool>> solution)
+        public Grid(int size, List<List<Tile>> tiles, List<Hint> top, List<Hint> side, List< List<bool>> solution)
         {
             Tiles = tiles;
             TopHints = top;
             SideHints = side;
             Size = size;
-            Solution = solution;           
+            Solution = solution;
+
+            SolveTrivial();
         }
 
         public int Shaded(int row)
@@ -31,34 +34,128 @@ namespace NonoGramAI.Entities
             foreach (var h2 in hints.Hints)
                 score += h2;
 
-            return score;
+            var set = Tiles[row].Count(r => r.Set && r.State);
+
+            return score-set;
         }
 
-        public static Tile[,] GenerateNewTiles(int size)
+        public Grid GenerateNewTiles()
         {
-            var tiles = new Tile[size, size];
-            for (var i = 0; i < size; i++)
+            var tiles = new List<List<Tile>>();
+            for (var i = 0; i < Size; i++)
             {
-                for (var j = 0; j < size; j++)
+                var row = new List<Tile>(Size);
+                for (var j = 0; j < Size; j++)
+                    row.Add(new Tile(i, j));
+                tiles.Add(row);
+            }
+
+            return new Grid(Size,tiles,TopHints,SideHints,Solution);
+        }
+
+        private void SolveTrivial()
+        {
+            for (var i = 0; i < Size; i++)
+            {
+                var rowHints = SideHints[i].Hints;
+
+                if (rowHints.Sum() + rowHints.Count - 1 == Size)
                 {
-                    var tile = new Tile(i, j);
-                    tiles[i, j] = tile;
+                    var x = 1;
+                    for (var j = 0; j < Size; j++)
+                    {
+                        var temp = rowHints.GetRange(0, x);
+                        if (j == temp.Sum() + temp.Count - 1)
+                        {
+                            Tiles[i][j].State = false;
+                            Tiles[i][j].Set = true;
+                            x++;
+                        }
+                        else
+                        {
+                            Tiles[i][j].State = true;
+                            Tiles[i][j].Set = true;
+                        }
+
+                    }
+                }
+
+                var largest = rowHints.OrderByDescending(h => h).First();
+                if (largest == Size)
+                {
+                    for (var j = 0; j < Size; j++)
+                    {
+                        Tiles[i][j].State = true;
+                        Tiles[i][j].Set = true;
+                    }
+                }
+                else if (largest > Size / 2)
+                {
+                    var offset = Math.Abs(Size / 2 - largest);
+                    var start = Size % 2 == 1 ? Size / 2 - offset + 1 : Size / 2 - offset;
+                    for (var j = start; j < Size / 2 + offset; j++)
+                    {
+                        Tiles[i][j].State = true;
+                        Tiles[i][j].Set = true;
+                    }
+                }
+
+                var colHints = TopHints[i].Hints;
+                if (colHints.Sum() + colHints.Count - 1 == Size)
+                {
+                    var x = 1;
+                    for (var j = 0; j < Size; j++)
+                    {
+                        var temp = colHints.GetRange(0, x);
+                        if (j == temp.Sum() + temp.Count - 1)
+                        {
+                            Tiles[j][i].State = false;
+                            Tiles[j][i].Set = true;
+                            x++;
+                        }
+                        else
+                        {
+                            Tiles[j][i].State = true;
+                            Tiles[j][i].Set = true;
+                        }
+
+                    }
+                }
+
+                largest = colHints.OrderByDescending(h => h).First();
+                if (largest == Size)
+                {
+                    for (var j = 0; j < Size; j++)
+                    {
+                        Tiles[j][i].State = true;
+                        Tiles[j][i].Set = true;
+                    }
+                }
+                else if (largest > Size / 2)
+                {
+                    var offset = Math.Abs(Size / 2 - largest);
+                    var start = Size % 2 == 1 ? Size / 2 - offset + 1 : Size / 2 - offset;
+                    for (var j = start; j < Size / 2 + offset; j++)
+                    {
+                        Tiles[j][i].State = true;
+                        Tiles[j][i].Set = true;
+                    }
                 }
             }
-            return tiles;
         }
 
-        public static Tile[,] CopyTiles(Grid org)
+        public static List<List<Tile>> CopyTiles(Grid org)
         {
-            var tiles = new Tile[org.Size, org.Size];
-            for (var row = 0; row < org.Size; row++)
+            var tiles = new List<List<Tile>>(org.Size);
+            for (var i = 0; i < org.Size; i++)
             {
-                for (var col = 0; col < org.Size; col++)
+                var row = new List<Tile>(org.Size);
+                for (var j = 0; j < org.Size; j++)
                 {
-                    var tile = new Tile(row, col);
-                    tiles[row, col] = tile;
-                    tile.State = org.Tiles[row, col].State;
+                    var tile = new Tile(i, j) {State = org.Tiles[i][j].State};
+                    row.Add(tile);
                 }
+                tiles.Add(row);
             }
             return tiles;
         }
@@ -69,28 +166,28 @@ namespace NonoGramAI.Entities
             //Start backwards scoot at the beginning on the consecutive tiles
             if (end < col)
             {
-                while (Tiles[row, col].State)
+                while (Tiles[row][col].State)
                     col--;
                 col++;
             }
-            var temp = Tiles[row, end].State;
-            var placeholder = Tiles[row, col].State;
+            var temp = Tiles[row][end].State;
+            var placeholder = Tiles[row][col].State;
             while (col != end)
             {
-                Tiles[row, col].State = temp;
+                Tiles[row][col].State = temp;
                 temp = placeholder;
                 if (end > col)
                 {
-                    placeholder = Tiles[row, col + 1].State;
+                    placeholder = Tiles[row][col + 1].State;
                     col++;
                 }
                 else if (end < col)
                 {
-                    placeholder = Tiles[row, col - 1].State;
+                    placeholder = Tiles[row][col - 1].State;
                     col--;
                 }
                 if (col == end)
-                    Tiles[row, col].State = temp;
+                    Tiles[row][col].State = temp;
             }
 
         }
@@ -103,7 +200,7 @@ namespace NonoGramAI.Entities
             {
                 for (int col = 0; col < Size; col++)
                 {
-                    if (Tiles[position, col].State)
+                    if (Tiles[position][col].State)
                         count++;
                     else if (count > 0)
                     {
@@ -116,7 +213,7 @@ namespace NonoGramAI.Entities
             {
                 for (var row = 0; row < Size; row++)
                 {
-                    if (Tiles[row, position].State)
+                    if (Tiles[row][position].State)
                         count++;
                     else if (count > 0)
                     {
@@ -129,26 +226,9 @@ namespace NonoGramAI.Entities
             return consecutiveList;
         }
 
-        public void ClearTiles()
+        private int GetScore()
         {
-            foreach (var tile in Tiles)
-            {
-                tile.State = false;
-            }
-        }
-
-        public List<Tile> GetTiles()
-        {
-            var list = new List<Tile>();
-            for (var i = 0; i < Size; i++)
-                for(var j = 0; j < Size; j++)
-                    list.Add(Tiles[i,j]);
-            return list;
-        }
-
-        private double GetScore()
-        {
-            var score = 0.0;
+            var score = 0;
 
             for (var i = 0; i < Size; i++)
                 score += GetRowScore(i);
@@ -156,28 +236,27 @@ namespace NonoGramAI.Entities
             return score;
         }
 
-        public double GetRowScore(int row)
+        public int GetRowScore(int row)
         {
-            var score = 0.0;
+            var score = 0;
 
             for (var j = 0; j < Size; j++)
-                if (Tiles[row, j].State == Solution[row][j] && Tiles[row, j].State)
+                if (Tiles[row][j].State == Solution[row][j] && Tiles[row][j].State)
                     score++;
             if (score == SideHints[row].Hints.Sum())
                 score++;
-
 
             return score;
         }
 
         public override int GetHashCode()
         {
-            var id = "";
+            var id = 0;
             for (var i = 0; i < Size; i++)
             {
-                id += GetRowScore(i);
+                id ^= GetRowScore(i).GetHashCode();
             }
-            return id.GetHashCode();
+            return id;
         }
 
         public override bool Equals(object obj)
