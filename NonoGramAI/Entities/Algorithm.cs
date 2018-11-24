@@ -22,19 +22,17 @@ namespace NonoGramAI.Entities
 
         private static List<Tile> RandomizeRow(List<Tile> row, int shaded, Random rnd)
         {
+            var potentialTiles = row.Where(t => !t.Set).OrderBy(t => rnd.Next()).ToList();
             if (row.All(r => r.Set && r.State)) 
                 return row;
 
-            foreach (var tile in row)
+            foreach (var tile in potentialTiles)
                 if (!tile.Set) tile.State = false;
 
             for (var x = 0; x < shaded; x++)
             {
-                var col = rnd.Next(row.Count);
-                if (row[col].State || row[col].Set)
-                    x--;
-                else
-                    row[col].State = true;
+                potentialTiles.First().State = true;
+                potentialTiles.Remove(potentialTiles.First());
             }
 
             return row;
