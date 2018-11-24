@@ -7,8 +7,8 @@ namespace NonoGramAI.Entities
     {
         public static Grid Crowd(List<Grid> grids)
         {
-            var newGrid = grids.OrderByDescending(g => g.Score).First();
-            var size = newGrid.Size;
+            var best = grids.OrderByDescending(g => g.Score).First();
+            var size = best.Size;
             var rowDict = new Dictionary<Row,int>();
             foreach (var grid in grids)
             {
@@ -16,7 +16,7 @@ namespace NonoGramAI.Entities
                 {
                     var rowList = new Tile[grid.Size];
                     for (var j = 0; j < grid.Size; j++)
-                        rowList[j] = grid.Tiles[i, j];
+                        rowList[j] = grid.Tiles[i][j];
                     var row = new Row(rowList,i);
 
                     var count = 1;
@@ -26,17 +26,16 @@ namespace NonoGramAI.Entities
                 }
             }
 
-            var tiles = Grid.GenerateNewTiles(newGrid.Size);
+            var newGrid = best.GenerateNewTiles();
             for (var i = 0; i < size; i++)
             {
                 var i1 = i;
                 var tempDict = rowDict.Where(d => d.Key.Index == i1);
                 var bestRow = tempDict.OrderByDescending(d => d.Value).First().Key;
                 for(var j = 0; j < size; j++)
-                    tiles[i, j] = bestRow.Tiles[j];
+                    newGrid.Tiles[i][j] = bestRow.Tiles[j];
             }
-            var finalGrid = new Grid(size, tiles,newGrid.TopHints,newGrid.SideHints, newGrid.Solution);
-            return finalGrid.Score > newGrid.Score ? finalGrid : newGrid;
+            return newGrid.Score > best.Score ? newGrid : best;
         }
     }
 }
