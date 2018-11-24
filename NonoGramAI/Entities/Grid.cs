@@ -174,16 +174,19 @@ namespace NonoGramAI.Entities
             var placeholder = Tiles[row][col].State;
             while (col != end)
             {
-                Tiles[row][col].State = temp;
+                if (!Tiles[row][col].Set)
+                    Tiles[row][col].State = temp;
                 temp = placeholder;
                 if (end > col)
                 {
-                    placeholder = Tiles[row][col + 1].State;
+                    if (!Tiles[row][col + 1].Set)
+                        placeholder = Tiles[row][col + 1].State;
                     col++;
                 }
                 else if (end < col)
                 {
-                    placeholder = Tiles[row][col - 1].State;
+                    if (!Tiles[row][col - 1].Set)
+                        placeholder = Tiles[row][col - 1].State;
                     col--;
                 }
                 if (col == end)

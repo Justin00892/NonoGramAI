@@ -27,7 +27,7 @@ namespace NonoGramAI.Entities
                 return row;
 
             foreach (var tile in potentialTiles)
-                if (!tile.Set) tile.State = false;
+                tile.State = false;
 
             for (var x = 0; x < shaded; x++)
             {
@@ -161,7 +161,7 @@ namespace NonoGramAI.Entities
                         int? swapCol = null;
                         for (col = 0; col < mutation.Size; col++)
                         {
-                            if (mutation.Tiles[row][col].State)
+                            if (mutation.Tiles[row][col].State && !mutation.Tiles[row][col].Set)
                             {
                                 counter++;
                                 if (position < hints.Count)
