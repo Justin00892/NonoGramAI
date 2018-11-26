@@ -33,15 +33,15 @@ namespace NonoGramAI
             {
                 for (var j = 0; j < size; j++)
                 {
-                    var panel = _grid.Tiles[i][j].GetTilePanel();
+                    var panel = _grid.Rows[i].Tiles[j].GetTilePanel();
                     var x = i;
                     var y = j;
                     panel.Click += (o, args) =>
                     {
-                        _grid.Tiles[x][y].State = !_grid.Tiles[x][y].State;
-                        panel.BackColor = _grid.Tiles[x][y].State ? Color.Black : Color.White;
+                        _grid.Rows[x].Tiles[y].State = !_grid.Rows[x].Tiles[y].State;
+                        panel.BackColor = _grid.Rows[x].Tiles[y].State ? Color.Black : Color.White;
                     };
-                    //if(_grid.Tiles[x][y].Set) panel.BackColor = Color.Red;
+                    //if(_grid.Rows[x][y].Set) panel.BackColor = Color.Red;
                     gridPanel.Controls.Add(panel);
                     gridPanel.SetRow(panel, i);
                     gridPanel.SetColumn(panel, j);
@@ -135,13 +135,13 @@ namespace NonoGramAI
             }
 
             var size = topHints.Count;
-            var tiles = new List<List<Tile>>(size);
+            var tiles = new List<Row>(size);
             for (var i = 0; i < size; i++)
             {
                 var row = new List<Tile>(size);
                 for (var j = 0; j < size; j++)
                     row.Add(new Tile());
-                tiles.Add(row);
+                tiles.Add(new Row(row,i));
             }
                 
             
@@ -158,10 +158,10 @@ namespace NonoGramAI
                 for (var j = 0; j < _grid.Size; j++)
                 {
                     var panel = gridPanel.GetControlFromPosition(j, i);
-                    panel.BackColor = _grid.Tiles[i][j].State ? Color.Black : Color.White;
+                    panel.BackColor = _grid.Rows[i].Tiles[j].State ? Color.Black : Color.White;
 
-                    //if (_grid.Tiles[i][j].Set && !_grid.Tiles[i][j].State) panel.BackColor = Color.Red;
-                    //else if(_grid.Tiles[i][j].Set && _grid.Tiles[i][j].State) panel.BackColor = Color.Orange;
+                    //if (_grid.Rows[i][j].Set && !_grid.Rows[i][j].State) panel.BackColor = Color.Red;
+                    //else if(_grid.Rows[i][j].Set && _grid.Rows[i][j].State) panel.BackColor = Color.Orange;
                 }
             }
 

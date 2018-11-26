@@ -15,15 +15,15 @@ namespace NonoGramAI.Entities
             var rnd = new Random();
             var newGrid = grid.GenerateNewTiles();
             for(var x = 0; x < grid.Size;x++)
-                newGrid.Tiles[x] = RandomizeRow(newGrid.Tiles[x],newGrid.Shaded(x), rnd);
+                newGrid.Rows[x] = RandomizeRow(newGrid.Rows[x],newGrid.Shaded(x), rnd);
 
             return newGrid;
         }
 
-        private static List<Tile> RandomizeRow(List<Tile> row, int shaded, Random rnd)
+        private static Row RandomizeRow(Row row, int shaded, Random rnd)
         {
-            var potentialTiles = row.Where(t => !t.Set).OrderBy(t => rnd.Next()).ToList();
-            if (row.All(r => r.Set && r.State)) 
+            var potentialTiles = row.Tiles.Where(t => !t.Set).OrderBy(t => rnd.Next()).ToList();
+            if (row.Tiles.All(r => r.Set && r.State)) 
                 return row;
 
             foreach (var tile in potentialTiles)
@@ -127,7 +127,7 @@ namespace NonoGramAI.Entities
                         break;
                 }
 
-                newGrid.Tiles[row] = parent.Tiles[row];
+                newGrid.Rows[row] = parent.Rows[row];
 
             }
 
@@ -161,7 +161,7 @@ namespace NonoGramAI.Entities
                         int? swapCol = null;
                         for (col = 0; col < mutation.Size; col++)
                         {
-                            if (mutation.Tiles[row][col].State && !mutation.Tiles[row][col].Set)
+                            if (mutation.Rows[row].Tiles[col].State && !mutation.Rows[row].Tiles[col].Set)
                             {
                                 counter++;
                                 if (position < hints.Count)
@@ -205,7 +205,7 @@ namespace NonoGramAI.Entities
                         for (var r = 0; r < original.Size; r++)
                         {
                             //For each shaded in a col
-                            if (mutation.Tiles[r][col].State)
+                            if (mutation.Rows[r].Tiles[col].State)
                                 shadedSpace.Add(r);
                             else
                                 whiteSpace.Add(r);
@@ -218,7 +218,7 @@ namespace NonoGramAI.Entities
                         if (shadedSpace.Count > sum)
                             do
                                 row = shadedSpace[rnd.Next(shadedSpace.Count)];
-                            while (mutation.Tiles[row][col].Set);
+                            while (mutation.Rows[row].Tiles[col].Set);
                         //Column Too-Few: Look for a column with too few shaded values in it, select a non-shaded square. 
                         //       Within that non-shaded square's row, swap the non-shaded square with a shaded square.
                         else if (shadedSpace.Count < sum)
@@ -227,7 +227,7 @@ namespace NonoGramAI.Entities
                             TooManyTooFew(col, row, mutation);
                         break;
                     default:
-                        RandomizeRow(mutation.Tiles[row], mutation.Shaded(row),rnd);
+                        RandomizeRow(mutation.Rows[row], mutation.Shaded(row),rnd);
                         break;
                }
             }
@@ -237,18 +237,18 @@ namespace NonoGramAI.Entities
         private static void TooManyTooFew(int colNum, int rowNum, Grid grid)
         {
             var rnd = new Random();
-            var state = grid.Tiles[rowNum][colNum].State;
+            var state = grid.Rows[rowNum].Tiles[colNum].State;
             var possibleSwaps = new List<int>();
             for (var col = 0; col < grid.Size; col++)
             {
-                if (grid.Tiles[rowNum][col].State != state && !grid.Tiles[rowNum][col].Set)
+                if (grid.Rows[rowNum].Tiles[col].State != state && !grid.Rows[rowNum].Tiles[col].Set)
                     possibleSwaps.Add(col);
             }
 
             if (!possibleSwaps.Any()) return;
             var rndInt = possibleSwaps[rnd.Next(possibleSwaps.Count)];
-            grid.Tiles[rowNum][colNum].State = !state;
-            grid.Tiles[rowNum][rndInt].State = state;
+            grid.Rows[rowNum].Tiles[colNum].State = !state;
+            grid.Rows[rowNum].Tiles[rndInt].State = state;
 
         }
     }

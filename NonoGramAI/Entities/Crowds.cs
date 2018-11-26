@@ -14,7 +14,7 @@ namespace NonoGramAI.Entities
             {
                 for(var i = 0; i < grid.Size; i ++)
                 {
-                    var row = new Row(grid.Tiles[i],i);
+                    var row = grid.Rows[i];
 
                     var count = 1;
                     if (rowDict.ContainsKey(row))
@@ -30,7 +30,7 @@ namespace NonoGramAI.Entities
                 var tempDict = rowDict.Where(d => d.Key.Index == i1);
                 var bestRow = tempDict.OrderByDescending(d => d.Value).First().Key;
                 for(var j = 0; j < size; j++)
-                    newGrid.Tiles[i][j] = bestRow.Tiles[j];
+                    newGrid.Rows[i].Tiles[j] = bestRow.Tiles[j];
             }
             return newGrid.Score > best.Score ? newGrid : best;
         }
