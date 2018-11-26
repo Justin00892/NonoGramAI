@@ -9,7 +9,7 @@
       <Value Profile="(Default)">16</Value>
     </Setting>
     <Setting Name="Generations" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">10</Value>
+      <Value Profile="(Default)">100</Value>
     </Setting>
     <Setting Name="CrossoverMethod" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">3</Value>

@@ -167,7 +167,7 @@ namespace NonoGramAI.Entities
             //Start backwards scoot at the beginning on the consecutive tiles
             if (end < col)
             {
-                while (Tiles[row][col].State)
+                while (col >= 0 && Tiles[row][col].State)
                     col--;
                 col++;
             }

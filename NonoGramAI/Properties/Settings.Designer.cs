@@ -49,7 +49,7 @@ namespace NonoGramAI.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("10")]
+        [global::System.Configuration.DefaultSettingValueAttribute("100")]
         public int Generations {
             get {
                 return ((int)(this["Generations"]));

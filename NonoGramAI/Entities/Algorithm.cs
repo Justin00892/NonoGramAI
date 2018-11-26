@@ -7,8 +7,8 @@ namespace NonoGramAI.Entities
 {
     public static class Algorithm
     {
-        private static Grid _grid;
-        private static Dictionary<Grid, int> _population;
+        //private static Grid _grid;
+        //private static Dictionary<Grid, int> _population;
 
         public static Grid Random(Grid grid)
         {
@@ -40,56 +40,56 @@ namespace NonoGramAI.Entities
 
         public static Grid Genetic(Grid grid)
         {
-            _grid = grid;
+            //_grid = grid;
             var rnd = new Random();
-            _population = _grid.ExistingPop ?? new Dictionary<Grid, int>();
+            var population = grid.ExistingPop ?? new Dictionary<Grid, int>();
 
-            if (_grid.Stagnant >= 25)
-                NaturalSelection();
+            if (grid.Stagnant >= 25)
+                NaturalSelection(population);
 
-            while (_population.Count < Settings.Default.Population)
+            while (population.Count < Settings.Default.Population)
             {
                 Grid newGrid;
                 do
                 {
-                    Console.WriteLine(_population.Count);
+                    Console.WriteLine(population.Count);
                     newGrid = Random(grid);
                 }                  
-                while (_population.ContainsKey(newGrid));
+                while (population.ContainsKey(newGrid));
 
-                _population.Add(newGrid, newGrid.Score);
+                population.Add(newGrid, newGrid.Score);
             }
-            NaturalSelection();
-            var alpha = _population.OrderByDescending(g => g.Value).First().Key;
-            _population.Remove(alpha);
-            while (_population.Count < Settings.Default.Population)
+            NaturalSelection(population);
+            var alpha = population.OrderByDescending(g => g.Value).First().Key;
+            population.Remove(alpha);
+            while (population.Count < Settings.Default.Population)
             {
-                var mate = _population.OrderBy(p => rnd.Next()).First().Key;
+                var mate = population.OrderBy(p => rnd.Next()).First().Key;
                 Grid child;
                 do
                 {
                     child = Crossover(alpha, mate);
                     child = Mutator(child);                   
                     //child = child.Score > mutation.Score ? child : mutation;
-                } while (_population.ContainsKey(child));
-                _population.Add(child, child.Score);               
+                } while (population.ContainsKey(child));
+                population.Add(child, child.Score);               
             }
 
-            var finalGrid = _population.OrderByDescending(p => p.Value).First().Key;
-            finalGrid.ExistingPop = _population;
+            var finalGrid = population.OrderByDescending(p => p.Value).First().Key;
+            finalGrid.ExistingPop = population;
 
             return finalGrid;
         }
 
-        private static void NaturalSelection()
+        private static void NaturalSelection(Dictionary<Grid, int> population)
         {
-            var avgScore = _population.Values.Average();
-            var temp = _population.Where(p => p.Value > avgScore).ToList();
-            _population.Clear();
+            var avgScore = population.Values.Average();
+            var temp = population.Where(p => p.Value > avgScore).ToList();
+            population.Clear();
             foreach (var entry in temp)
             {
-                if(!_population.ContainsKey(entry.Key))
-                    _population.Add(entry.Key,entry.Value);
+                if(!population.ContainsKey(entry.Key))
+                    population.Add(entry.Key,entry.Value);
             }
         }
 
@@ -115,9 +115,9 @@ namespace NonoGramAI.Entities
                         break;
                     case 2:
                         //Use any rows with perfect fitness, else random
-                        if (alpha.GetRowScore(row) > _grid.SideHints[row].Hints.Count)
+                        if (alpha.GetRowScore(row) > alpha.SideHints[row].Hints.Count)
                             parent = alpha;
-                        else if (mate.GetRowScore(row) > _grid.SideHints[row].Hints.Count)
+                        else if (mate.GetRowScore(row) > alpha.SideHints[row].Hints.Count)
                             parent = mate;
                         else
                             parent = rnd.NextDouble() > 0.5 ? alpha : mate;
@@ -214,7 +214,7 @@ namespace NonoGramAI.Entities
                         //Column Too-Many: Look for a column with too many shaded values in it, select a shaded square. 
                         //       Within that shaded square's row, swap the shaded square with a non-shaded square.
 
-                        var sum = _grid.TopHints[col].Hints.Sum();
+                        var sum = original.TopHints[col].Hints.Sum();
                         if (shadedSpace.Count > sum)
                             do
                                 row = shadedSpace[rnd.Next(shadedSpace.Count)];

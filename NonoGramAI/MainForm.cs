@@ -181,11 +181,11 @@ namespace NonoGramAI
                     runAIButton.Enabled = true;
                     break;
                 case 1:
-                    _grid = await RunGA();
+                    _grid = await RunGA(_grid);
                     runAIButton.Enabled = true;
                     break;
                 case 2:
-                    _grid = RunWoC();
+                    _grid = await RunWoC();
                     runAIButton.Enabled = true;
                     break;
                 default:
@@ -197,34 +197,35 @@ namespace NonoGramAI
             }
         }
 
-        private async Task<Grid> RunGA()
+        private async Task<Grid> RunGA(Grid grid)
         {
             var timer = new Stopwatch();
             timer.Start();
             for (var i = 0; i < _settings.Generations; i++)
             {
-                var grid = await Task<Grid>.Factory.StartNew(() => Algorithm.Genetic(_grid));
+                var tempGrid = grid;
+                grid = await Task<Grid>.Factory.StartNew(() => Algorithm.Genetic(tempGrid));
 
                 if (grid.Score > _grid.Score)
                 {
-                    _grid = grid;
                     UpdateDisplay();
                     timerLabel.Text = timer.Elapsed.ToString();
                 }                
                 else
-                    _grid.Stagnant++; 
+                    grid.Stagnant++; 
 
                 genLabel.Text = "Gen: " + i;
             }
             timer.Stop();
 
-            return _grid;
+            return grid;
         }
 
-        private Grid RunWoC()
+        private async Task<Grid> RunWoC()
         {
             var timer = new Stopwatch();
             var results = new ConcurrentBag<Grid>();
+            /*
             var taskList = new Task[_settings.Population / 2];
             timer.Start();
             var numProcessors = Environment.ProcessorCount;
@@ -233,17 +234,32 @@ namespace NonoGramAI
                 if (taskList.Count(t =>t != null && (int) t.Status <= 3) >= numProcessors) continue;
                 taskList[i] = Task.Factory.StartNew(() =>
                 {
-                    results.Add(Algorithm.Genetic(_grid));
+                    results.Add(RunGA(_grid).Result);
                 });
                 i++;
             }               
             Task.WaitAll(taskList);
+            */
+            var grid = _grid;
+            for (var i = 0; i < Settings.Default.Population/2; i++)
+            {
+                for (var j = 0; j < _settings.Generations; j++)
+                {
+                    var tempGrid = grid;
+                    grid = await Task<Grid>.Factory.StartNew(() => Algorithm.Genetic(tempGrid));
 
-            var final = Crowds.Crowd(results.ToList());
+                    if (grid.Score <= _grid.Score)
+                        grid.Stagnant++; 
+
+                    results.Add(grid);
+                }
+            }
+
+            _grid = Crowds.Crowd(results.ToList());
             timer.Stop();
             timerLabel.Text = timer.Elapsed.ToString();
             UpdateDisplay();
-            return final;
+            return _grid;
         }
 
         private void reset_Click(object sender, EventArgs e)
@@ -253,7 +269,8 @@ namespace NonoGramAI
 
         private void options_Click(object sender, EventArgs e)
         {
-            ShowDialog(new SettingsForm());
+            var dialog = new SettingsForm();
+            dialog.ShowDialog();
         }
     }
 }
