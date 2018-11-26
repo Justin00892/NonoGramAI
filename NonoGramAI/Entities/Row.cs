@@ -1,13 +1,14 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace NonoGramAI.Entities
 {
     public class Row
     {
-        public Tile[] Tiles { get; }
+        public List<Tile> Tiles { get; }
         public int Index { get; }
 
-        public Row(Tile[] tiles, int index)
+        public Row(List<Tile> tiles, int index)
         {
             Tiles = tiles;
             Index = index;

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using NonoGramAI.Properties;
 
 namespace NonoGramAI.Entities
 {
@@ -9,21 +10,21 @@ namespace NonoGramAI.Entities
         public List<List<Tile>> Tiles { get; }
         public List<Hint> TopHints { get; }
         public List<Hint> SideHints { get; }
-        public int Size { get; }
+        public int Size => Tiles.Count;
         public int Score => GetScore();
         public int Stagnant { get; set; }
         public List<List<bool>> Solution { get; }
         public Dictionary<Grid, int> ExistingPop { get; set; }
 
-        public Grid(int size, List<List<Tile>> tiles, List<Hint> top, List<Hint> side, List< List<bool>> solution)
+        public Grid(List<List<Tile>> tiles, List<Hint> top, List<Hint> side, List<List<bool>> solution)
         {
             Tiles = tiles;
             TopHints = top;
             SideHints = side;
-            Size = size;
             Solution = solution;
 
-            SolveTrivial();
+            if(Settings.Default.SolveTrivial)
+                SolveTrivial();
         }
 
         public int Shaded(int row)
@@ -46,11 +47,11 @@ namespace NonoGramAI.Entities
             {
                 var row = new List<Tile>(Size);
                 for (var j = 0; j < Size; j++)
-                    row.Add(new Tile(i, j));
+                    row.Add(new Tile());
                 tiles.Add(row);
             }
 
-            return new Grid(Size,tiles,TopHints,SideHints,Solution);
+            return new Grid(tiles,TopHints,SideHints,Solution);
         }
 
         private void SolveTrivial()
@@ -152,7 +153,7 @@ namespace NonoGramAI.Entities
                 var row = new List<Tile>(org.Size);
                 for (var j = 0; j < org.Size; j++)
                 {
-                    var tile = new Tile(i, j) {State = org.Tiles[i][j].State};
+                    var tile = new Tile {State = org.Tiles[i][j].State};
                     row.Add(tile);
                 }
                 tiles.Add(row);
@@ -201,7 +202,7 @@ namespace NonoGramAI.Entities
             var count = 0;
             if (isRow)
             {
-                for (int col = 0; col < Size; col++)
+                for (var col = 0; col < Size; col++)
                 {
                     if (Tiles[position][col].State)
                         count++;

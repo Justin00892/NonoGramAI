@@ -140,7 +140,7 @@ namespace NonoGramAI.Entities
         {
             var rnd = new Random();
             var newTiles = Grid.CopyTiles(original);
-            var mutation = new Grid(original.Size,newTiles,original.TopHints,original.SideHints, original.Solution);
+            var mutation = new Grid(newTiles,original.TopHints,original.SideHints, original.Solution);
             var method = rnd.Next(2);
 
             for (var row = 0; row < original.Size; row++)
@@ -178,7 +178,7 @@ namespace NonoGramAI.Entities
                             }
                             else if (counter > 0)
                             {
-                                if (position >= hints.Count || (position < hints.Count && counter < hints[position]))
+                                if (position >= hints.Count || position < hints.Count && counter < hints[position])
                                     optimumSwaps.Add(col);
                                 position++;
                                 counter = 0;

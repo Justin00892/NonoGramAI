@@ -5,16 +5,8 @@ namespace NonoGramAI.Entities
 {
     public sealed class Tile
     {
-        public int X { get; }
-        public int Y { get; }
         public bool State { get; set; }
         public bool Set { get; set; }
-
-        public Tile(int x, int y)
-        {
-            X = x;
-            Y = y;
-        }
 
         public Panel GetTilePanel()
         {

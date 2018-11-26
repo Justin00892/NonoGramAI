@@ -14,10 +14,7 @@ namespace NonoGramAI.Entities
             {
                 for(var i = 0; i < grid.Size; i ++)
                 {
-                    var rowList = new Tile[grid.Size];
-                    for (var j = 0; j < grid.Size; j++)
-                        rowList[j] = grid.Tiles[i][j];
-                    var row = new Row(rowList,i);
+                    var row = new Row(grid.Tiles[i],i);
 
                     var count = 1;
                     if (rowDict.ContainsKey(row))

@@ -22,17 +22,6 @@ namespace NonoGramAI
             InitializeComponent();
         }
 
-        private MainForm(Grid grid)
-        {
-            InitializeComponent();
-            chooseFileButton.Dispose();
-            runAIButton.Show();
-            runAIButton.Enabled = false;
-
-            _grid = grid;
-            ConstructBoard();
-        }
-
         private void ConstructBoard()
         {
             var size = _grid.TopHints.Count;
@@ -151,13 +140,13 @@ namespace NonoGramAI
             {
                 var row = new List<Tile>(size);
                 for (var j = 0; j < size; j++)
-                    row.Add(new Tile(i, j));
+                    row.Add(new Tile());
                 tiles.Add(row);
             }
                 
             
 
-            _grid = new Grid(size,tiles,topHints,sideHints,solution);
+            _grid = new Grid(tiles,topHints,sideHints,solution);
 
             ConstructBoard();
         }
@@ -242,21 +231,29 @@ namespace NonoGramAI
             for (var i = 0; i < taskList.Length;)
             {
                 if (taskList.Count(t =>t != null && (int) t.Status <= 3) >= numProcessors) continue;
-                taskList[i] = Task.Factory.StartNew(async () =>
+                taskList[i] = Task.Factory.StartNew(() =>
                 {
-                    var newForm = new MainForm(_grid);
-                    results.Add(await newForm.RunGA());
+                    results.Add(Algorithm.Genetic(_grid));
                 });
                 i++;
             }               
             Task.WaitAll(taskList);
 
-            //var final = Crowds.Crowd(results.ToList());
+            var final = Crowds.Crowd(results.ToList());
             timer.Stop();
             timerLabel.Text = timer.Elapsed.ToString();
             UpdateDisplay();
-            //return final;
-            return _grid;
+            return final;
+        }
+
+        private void reset_Click(object sender, EventArgs e)
+        {
+            Application.Restart();
+        }
+
+        private void options_Click(object sender, EventArgs e)
+        {
+            ShowDialog(new SettingsForm());
         }
     }
 }

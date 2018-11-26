@@ -35,14 +35,19 @@ namespace NonoGramAI
             this.sideListPanel = new System.Windows.Forms.TableLayoutPanel();
             this.topListPanel = new System.Windows.Forms.TableLayoutPanel();
             this.buttonPanel = new System.Windows.Forms.Panel();
+            this.timerLabel = new System.Windows.Forms.Label();
             this.genLabel = new System.Windows.Forms.Label();
             this.chooseFileButton = new System.Windows.Forms.Button();
             this.scoreLabel = new System.Windows.Forms.Label();
             this.runAIButton = new System.Windows.Forms.Button();
             this.openFileDialog = new System.Windows.Forms.OpenFileDialog();
-            this.timerLabel = new System.Windows.Forms.Label();
+            this.menuStrip1 = new System.Windows.Forms.MenuStrip();
+            this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.optionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.resetToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mainPanel.SuspendLayout();
             this.buttonPanel.SuspendLayout();
+            this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // mainPanel
@@ -56,7 +61,7 @@ namespace NonoGramAI
             this.mainPanel.Controls.Add(this.sideListPanel, 0, 1);
             this.mainPanel.Controls.Add(this.topListPanel, 1, 0);
             this.mainPanel.Controls.Add(this.buttonPanel, 0, 0);
-            this.mainPanel.Location = new System.Drawing.Point(0, 0);
+            this.mainPanel.Location = new System.Drawing.Point(0, 28);
             this.mainPanel.Margin = new System.Windows.Forms.Padding(0);
             this.mainPanel.Name = "mainPanel";
             this.mainPanel.RowCount = 2;
@@ -122,6 +127,15 @@ namespace NonoGramAI
             this.buttonPanel.Size = new System.Drawing.Size(100, 100);
             this.buttonPanel.TabIndex = 4;
             // 
+            // timerLabel
+            // 
+            this.timerLabel.AutoSize = true;
+            this.timerLabel.Location = new System.Drawing.Point(13, 51);
+            this.timerLabel.Name = "timerLabel";
+            this.timerLabel.Size = new System.Drawing.Size(56, 17);
+            this.timerLabel.TabIndex = 3;
+            this.timerLabel.Text = "Time: X";
+            // 
             // genLabel
             // 
             this.genLabel.AutoSize = true;
@@ -162,14 +176,39 @@ namespace NonoGramAI
             this.runAIButton.Visible = false;
             this.runAIButton.Click += new System.EventHandler(this.runAIButton_Click);
             // 
-            // timerLabel
+            // menuStrip1
             // 
-            this.timerLabel.AutoSize = true;
-            this.timerLabel.Location = new System.Drawing.Point(13, 51);
-            this.timerLabel.Name = "timerLabel";
-            this.timerLabel.Size = new System.Drawing.Size(56, 17);
-            this.timerLabel.TabIndex = 3;
-            this.timerLabel.Text = "Time: X";
+            this.menuStrip1.ImageScalingSize = new System.Drawing.Size(20, 20);
+            this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.settingsToolStripMenuItem});
+            this.menuStrip1.Location = new System.Drawing.Point(0, 0);
+            this.menuStrip1.Name = "menuStrip1";
+            this.menuStrip1.Size = new System.Drawing.Size(782, 28);
+            this.menuStrip1.TabIndex = 1;
+            this.menuStrip1.Text = "menuStrip1";
+            // 
+            // settingsToolStripMenuItem
+            // 
+            this.settingsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.optionsToolStripMenuItem,
+            this.resetToolStripMenuItem});
+            this.settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
+            this.settingsToolStripMenuItem.Size = new System.Drawing.Size(74, 24);
+            this.settingsToolStripMenuItem.Text = "Settings";
+            // 
+            // optionsToolStripMenuItem
+            // 
+            this.optionsToolStripMenuItem.Name = "optionsToolStripMenuItem";
+            this.optionsToolStripMenuItem.Size = new System.Drawing.Size(216, 26);
+            this.optionsToolStripMenuItem.Text = "Options";
+            this.optionsToolStripMenuItem.Click += new System.EventHandler(this.options_Click);
+            // 
+            // resetToolStripMenuItem
+            // 
+            this.resetToolStripMenuItem.Name = "resetToolStripMenuItem";
+            this.resetToolStripMenuItem.Size = new System.Drawing.Size(216, 26);
+            this.resetToolStripMenuItem.Text = "Reset";
+            this.resetToolStripMenuItem.Click += new System.EventHandler(this.reset_Click);
             // 
             // MainForm
             // 
@@ -179,6 +218,8 @@ namespace NonoGramAI
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.ClientSize = new System.Drawing.Size(782, 753);
             this.Controls.Add(this.mainPanel);
+            this.Controls.Add(this.menuStrip1);
+            this.MainMenuStrip = this.menuStrip1;
             this.Margin = new System.Windows.Forms.Padding(4);
             this.Name = "MainForm";
             this.Text = "Nonogram AI";
@@ -186,6 +227,8 @@ namespace NonoGramAI
             this.mainPanel.PerformLayout();
             this.buttonPanel.ResumeLayout(false);
             this.buttonPanel.PerformLayout();
+            this.menuStrip1.ResumeLayout(false);
+            this.menuStrip1.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -203,6 +246,10 @@ namespace NonoGramAI
         private Button chooseFileButton;
         private Label genLabel;
         private Label timerLabel;
+        private MenuStrip menuStrip1;
+        private ToolStripMenuItem settingsToolStripMenuItem;
+        private ToolStripMenuItem optionsToolStripMenuItem;
+        private ToolStripMenuItem resetToolStripMenuItem;
     }
 }
 
