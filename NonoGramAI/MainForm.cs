@@ -75,7 +75,7 @@ namespace NonoGramAI
             var dr = openFileDialog.ShowDialog();
             if(dr != DialogResult.OK)
             {
-                Application.Exit();
+                chooseFileButton.Enabled = true;
                 return;
             }
             var topHints = new List<Hint>();
@@ -208,13 +208,14 @@ namespace NonoGramAI
 
                 if (grid.Score > _grid.Score)
                 {
+                    _grid = grid;
                     UpdateDisplay();
-                    timerLabel.Text = timer.Elapsed.ToString();
+                    genLabel.Text = "Gen: " + i;
                 }                
                 else
-                    grid.Stagnant++; 
-
-                genLabel.Text = "Gen: " + i;
+                    grid.Stagnant++;    
+                
+                timerLabel.Text = timer.Elapsed.ToString();
             }
             timer.Stop();
 

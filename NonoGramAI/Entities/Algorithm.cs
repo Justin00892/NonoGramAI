@@ -52,7 +52,7 @@ namespace NonoGramAI.Entities
                 Grid newGrid;
                 do
                 {
-                    Console.WriteLine(population.Count);
+                    //Console.WriteLine(population.Count);
                     newGrid = Random(grid);
                 }                  
                 while (population.ContainsKey(newGrid));
@@ -77,7 +77,6 @@ namespace NonoGramAI.Entities
 
             var finalGrid = population.OrderByDescending(p => p.Value).First().Key;
             finalGrid.ExistingPop = population;
-
             return finalGrid;
         }
 
@@ -92,7 +91,6 @@ namespace NonoGramAI.Entities
                     population.Add(entry.Key,entry.Value);
             }
         }
-
 
         private static Grid Crossover(Grid alpha, Grid mate)
         {
@@ -150,6 +148,7 @@ namespace NonoGramAI.Entities
                 switch (method)
                 {
                     case 0:
+                        if (Settings.Default.SolveTrivial) break;
                         //Scoot: Go through a row using the hint values, and verify that the shaded squares match.
                         //       if there are too many shaded squares in a row, scoot them over to get the correct distribution.
                         //var tiles = mutation.GetConsecutiveList(row, true);

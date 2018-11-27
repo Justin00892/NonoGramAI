@@ -40,6 +40,18 @@ namespace NonoGramAI.Entities
             return score-set;
         }
 
+        public int TotalShaded()
+        {
+            var total = 0;
+            for(var i = 0; i < Size; i++)
+            {
+                var set = Rows[i].Tiles.Count(r => r.Set && r.State);
+                total += Shaded(i)+set;
+            }
+
+            return total;
+        }
+
         public Grid GenerateNewTiles()
         {
             var tiles = new List<Row>();
@@ -171,6 +183,9 @@ namespace NonoGramAI.Entities
                     col--;
                 col++;
             }
+
+            if (col < 0) return;
+
             var temp = Rows[row].Tiles[end].State;
             var placeholder = Rows[row].Tiles[col].State;
             while (col != end)
@@ -201,8 +216,11 @@ namespace NonoGramAI.Entities
             var score = 0;
 
             for (var i = 0; i < Size; i++)
+            {
                 score += GetRowScore(i);
-
+                score += GetColScore(i);
+            }
+                
             return score;
         }
 
@@ -214,6 +232,19 @@ namespace NonoGramAI.Entities
                 if (Rows[row].Tiles[j].State == Solution[row][j] && Rows[row].Tiles[j].State)
                     score++;
             if (score == SideHints[row].Hints.Sum())
+                score++;
+
+            return score;
+        }
+
+        private int GetColScore(int col)
+        {
+            var score = 0;
+
+            for (var i = 0; i < Size; i++)
+                if (Rows[i].Tiles[col].State == Solution[i][col] && Rows[i].Tiles[col].State)
+                    score++;
+            if (score == TopHints[col].Hints.Sum())
                 score++;
 
             return score;
