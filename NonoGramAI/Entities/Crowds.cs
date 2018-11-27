@@ -23,18 +23,18 @@ namespace NonoGramAI.Entities
                 }
             }
 
-            var newGrid = best.GenerateNewTiles();
+            var newTiles = new List<Row>(size);
             for (var i = 0; i < size; i++)
             {
-                var i1 = i;
-                var tempDict = rowDict.Where(d => d.Key.Index == i1).ToList();
+                var tempDict = rowDict.Where(d => d.Key.Index == i).ToList();
                 var bestRow = tempDict.OrderByDescending(d => d.Value).First();
 
                 if (bestRow.Value == 1)
                     bestRow = tempDict.OrderByDescending(d => d.Key.RowScore).First();
 
-                newGrid.Rows.Add(bestRow.Key);
+                newTiles.Add(bestRow.Key);
             }
+            var newGrid = new Grid(newTiles,best.TopHints, best.SideHints, best.Solution);
             return newGrid.Score > best.Score ? newGrid : best;
         }
     }

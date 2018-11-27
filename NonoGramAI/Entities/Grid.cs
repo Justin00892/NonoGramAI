@@ -239,12 +239,12 @@ namespace NonoGramAI.Entities
 
         public override int GetHashCode()
         {
-            var id = 0;
+            var id = "";
             for (var i = 0; i < Size; i++)
-            {
-                id ^= Rows[i].RowScore.GetHashCode();
-            }
-            return id;
+                for (var j = 0; j < Size; j++)
+                    id += Rows[i].Tiles[j].State;
+
+            return id.GetHashCode();
         }
 
         public override bool Equals(object obj)
