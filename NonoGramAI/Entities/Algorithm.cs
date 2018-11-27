@@ -109,13 +109,13 @@ namespace NonoGramAI.Entities
                         break;
                     case 1:
                         //Use parent with best row fitness
-                        parent = alpha.GetRowScore(row) > mate.GetRowScore(row) ? alpha : mate;
+                        parent = alpha.Rows[row].RowScore > mate.Rows[row].RowScore ? alpha : mate;
                         break;
                     case 2:
                         //Use any rows with perfect fitness, else random
-                        if (alpha.GetRowScore(row) > alpha.SideHints[row].Hints.Count)
+                        if (alpha.Rows[row].RowScore > alpha.SideHints[row].Hints.Count)
                             parent = alpha;
-                        else if (mate.GetRowScore(row) > alpha.SideHints[row].Hints.Count)
+                        else if (mate.Rows[row].RowScore > alpha.SideHints[row].Hints.Count)
                             parent = mate;
                         else
                             parent = rnd.NextDouble() > 0.5 ? alpha : mate;

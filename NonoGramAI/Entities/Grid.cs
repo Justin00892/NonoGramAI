@@ -60,7 +60,7 @@ namespace NonoGramAI.Entities
                 var row = new List<Tile>(Size);
                 for (var j = 0; j < Size; j++)
                     row.Add(new Tile());
-                tiles.Add(new Row(row,i));
+                tiles.Add(new Row(row,i,Solution[i]));
             }
 
             return new Grid(tiles,TopHints,SideHints,Solution);
@@ -168,7 +168,7 @@ namespace NonoGramAI.Entities
                     var tile = new Tile {State = org.Rows[i].Tiles[j].State};
                     row.Add(tile);
                 }
-                tiles.Add(new Row(row,i));
+                tiles.Add(new Row(row,i,org.Solution[i]));
             }
             return tiles;
         }
@@ -217,23 +217,10 @@ namespace NonoGramAI.Entities
 
             for (var i = 0; i < Size; i++)
             {
-                score += GetRowScore(i);
+                score += Rows[i].RowScore;
                 score += GetColScore(i);
             }
                 
-            return score;
-        }
-
-        public int GetRowScore(int row)
-        {
-            var score = 0;
-
-            for (var j = 0; j < Size; j++)
-                if (Rows[row].Tiles[j].State == Solution[row][j] && Rows[row].Tiles[j].State)
-                    score++;
-            if (score == SideHints[row].Hints.Sum())
-                score++;
-
             return score;
         }
 
@@ -255,7 +242,7 @@ namespace NonoGramAI.Entities
             var id = 0;
             for (var i = 0; i < Size; i++)
             {
-                id ^= GetRowScore(i).GetHashCode();
+                id ^= Rows[i].RowScore.GetHashCode();
             }
             return id;
         }

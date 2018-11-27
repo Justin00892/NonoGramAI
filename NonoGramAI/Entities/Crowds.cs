@@ -27,10 +27,13 @@ namespace NonoGramAI.Entities
             for (var i = 0; i < size; i++)
             {
                 var i1 = i;
-                var tempDict = rowDict.Where(d => d.Key.Index == i1);
-                var bestRow = tempDict.OrderByDescending(d => d.Value).First().Key;
-                for(var j = 0; j < size; j++)
-                    newGrid.Rows[i].Tiles[j] = bestRow.Tiles[j];
+                var tempDict = rowDict.Where(d => d.Key.Index == i1).ToList();
+                var bestRow = tempDict.OrderByDescending(d => d.Value).First();
+
+                if (bestRow.Value == 1)
+                    bestRow = tempDict.OrderByDescending(d => d.Key.RowScore).First();
+
+                newGrid.Rows.Add(bestRow.Key);
             }
             return newGrid.Score > best.Score ? newGrid : best;
         }

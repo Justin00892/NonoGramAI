@@ -7,11 +7,24 @@ namespace NonoGramAI.Entities
     {
         public List<Tile> Tiles { get; }
         public int Index { get; }
+        public int RowScore => GetRowScore();
+        private List<bool> Solution { get; }
 
-        public Row(List<Tile> tiles, int index)
+        public Row(List<Tile> tiles, int index, List<bool> solution)
         {
             Tiles = tiles;
             Index = index;
+            Solution = solution;
+        }
+
+        private int GetRowScore()
+        {
+            var score = Tiles.Where((t, j) => t.State == Solution[j] && t.State).Count();
+
+            if (score == Solution.Count(s => s))
+                score++;
+
+            return score;
         }
 
         public override int GetHashCode()

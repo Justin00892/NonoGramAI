@@ -141,7 +141,7 @@ namespace NonoGramAI
                 var row = new List<Tile>(size);
                 for (var j = 0; j < size; j++)
                     row.Add(new Tile());
-                tiles.Add(new Row(row,i));
+                tiles.Add(new Row(row,i,solution[i]));
             }
                 
             
