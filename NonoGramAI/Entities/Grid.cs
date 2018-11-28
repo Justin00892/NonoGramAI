@@ -60,7 +60,7 @@ namespace NonoGramAI.Entities
                 var row = new List<Tile>(Size);
                 for (var j = 0; j < Size; j++)
                     row.Add(new Tile());
-                tiles.Add(new Row(row,i));
+                tiles.Add(new Row(row,i,SideHints[i].Hints,Solution[i]));
             }
 
             return new Grid(tiles,TopHints,SideHints,Solution);
@@ -168,7 +168,7 @@ namespace NonoGramAI.Entities
                     var tile = new Tile {State = org.Rows[i].Tiles[j].State};
                     row.Add(tile);
                 }
-                tiles.Add(new Row(row,i));
+                tiles.Add(new Row(row,i,org.SideHints[i].Hints,org.Solution[i]));
             }
             return tiles;
         }
@@ -218,46 +218,57 @@ namespace NonoGramAI.Entities
 
             for (var i = 0; i < Size; i++)
             {
-                score += GetRowScore(i);
+                score += Rows[i].RowScore;
                 score += GetColScore(i);
             }
                 
             return score;
         }
 
-        public int GetRowScore(int row)
-        {
-            var score = 0;
-
-            for (var j = 0; j < Size; j++)
-                if (Rows[row].Tiles[j].State == Solution[row][j] && Rows[row].Tiles[j].State)
-                    score++;
-            if (score == SideHints[row].Hints.Sum())
-                score++;
-
-            return score;
-        }
-
         private int GetColScore(int col)
         {
             var score = 0;
-
-            for (var i = 0; i < Size; i++)
-                if (Rows[i].Tiles[col].State == Solution[i][col] && Rows[i].Tiles[col].State)
+            if (Settings.Default.SolutionScoring)
+            {
+                for (var i = 0; i < Size; i++)
+                    if (Rows[i].Tiles[col].State == Solution[i][col] && Rows[i].Tiles[col].State)
+                        score++;
+                if (score == TopHints[col].Hints.Sum())
                     score++;
-            if (score == TopHints[col].Hints.Sum())
-                score++;
+            }
+            else
+            {
+                var consecutiveList = new List<int>();
+                var count = 0;
+                for (var row = 0; row < Size; row++)
+                {
+                    if (Rows[row].Tiles[col].State)
+                        count++;
+                    else if (count > 0)
+                    {
+                        consecutiveList.Add(count);
+                        count = 0;
+                    }
+                }
+                if (count > 0) consecutiveList.Add(count);
 
+                if (consecutiveList.Count > TopHints[col].Hints.Count) return score;
+                //Adds one to score for every hint that has the coorsponding size
+                score = TopHints[col].Hints
+                    .TakeWhile((t, x) => x < consecutiveList.Count)
+                    .Where((t, x) => consecutiveList[x] == t).Count();
+                //If all a row's hints are satisfied, up score
+                if (score == TopHints[col].Hints.Count) score++;
+            }
             return score;
         }
 
         public override int GetHashCode()
         {
             var id = 0;
-            for (var i = 0; i < Size; i++)
-            {
-                id ^= GetRowScore(i).GetHashCode();
-            }
+            foreach (var row in Rows)
+                id ^= row.GetHashCode();
+
             return id;
         }
 
