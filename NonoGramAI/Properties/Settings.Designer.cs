@@ -94,5 +94,17 @@ namespace NonoGramAI.Properties {
                 this["SolveTrivial"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool SolutionScoring {
+            get {
+                return ((bool)(this["SolutionScoring"]));
+            }
+            set {
+                this["SolutionScoring"] = value;
+            }
+        }
     }
 }

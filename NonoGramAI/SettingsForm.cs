@@ -16,6 +16,7 @@ namespace NonoGramAI
             crossTextBox.Text = Settings.Default.CrossoverMethod.ToString();
             mutTextBox.Text = Settings.Default.MutationMethod.ToString();
             trivialCheckBox.Checked = Settings.Default.SolveTrivial;
+            scoringCheckBox.Checked = Settings.Default.SolutionScoring;
         }
 
         private void saveButton_Click(object sender, EventArgs e)
@@ -28,6 +29,7 @@ namespace NonoGramAI
                 Settings.Default.CrossoverMethod = int.Parse(crossTextBox.Text);
                 Settings.Default.MutationMethod = int.Parse(mutTextBox.Text);
                 Settings.Default.SolveTrivial = trivialCheckBox.Checked;
+                Settings.Default.SolutionScoring = scoringCheckBox.Checked;
             }
             catch (Exception ex)
             {

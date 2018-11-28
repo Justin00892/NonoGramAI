@@ -141,11 +141,9 @@ namespace NonoGramAI
                 var row = new List<Tile>(size);
                 for (var j = 0; j < size; j++)
                     row.Add(new Tile());
-                tiles.Add(new Row(row,i,solution[i]));
+                tiles.Add(new Row(row,i,sideHints[i].Hints,solution[i]));
             }
                 
-            
-
             _grid = new Grid(tiles,topHints,sideHints,solution);
 
             ConstructBoard();
@@ -223,7 +221,7 @@ namespace NonoGramAI
             timer.Stop();
             try
             {
-                File.WriteAllLines(@"C:\Users\Public\data.txt", data);
+                File.WriteAllLines(@"C:\Users\Public\data_"+DateTime.Now.ToFileTime()+".txt", data);
             }
             catch (Exception ex)
             {

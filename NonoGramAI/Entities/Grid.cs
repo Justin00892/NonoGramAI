@@ -60,7 +60,7 @@ namespace NonoGramAI.Entities
                 var row = new List<Tile>(Size);
                 for (var j = 0; j < Size; j++)
                     row.Add(new Tile());
-                tiles.Add(new Row(row,i,Solution[i]));
+                tiles.Add(new Row(row,i,SideHints[i].Hints,Solution[i]));
             }
 
             return new Grid(tiles,TopHints,SideHints,Solution);
@@ -168,7 +168,7 @@ namespace NonoGramAI.Entities
                     var tile = new Tile {State = org.Rows[i].Tiles[j].State};
                     row.Add(tile);
                 }
-                tiles.Add(new Row(row,i,org.Solution[i]));
+                tiles.Add(new Row(row,i,org.SideHints[i].Hints,org.Solution[i]));
             }
             return tiles;
         }
@@ -227,24 +227,48 @@ namespace NonoGramAI.Entities
         private int GetColScore(int col)
         {
             var score = 0;
-
-            for (var i = 0; i < Size; i++)
-                if (Rows[i].Tiles[col].State == Solution[i][col] && Rows[i].Tiles[col].State)
+            if (Settings.Default.SolutionScoring)
+            {
+                for (var i = 0; i < Size; i++)
+                    if (Rows[i].Tiles[col].State == Solution[i][col] && Rows[i].Tiles[col].State)
+                        score++;
+                if (score == TopHints[col].Hints.Sum())
                     score++;
-            if (score == TopHints[col].Hints.Sum())
-                score++;
+            }
+            else
+            {
+                var consecutiveList = new List<int>();
+                var count = 0;
+                for (var row = 0; row < Size; row++)
+                {
+                    if (Rows[row].Tiles[col].State)
+                        count++;
+                    else if (count > 0)
+                    {
+                        consecutiveList.Add(count);
+                        count = 0;
+                    }
+                }
+                if (count > 0) consecutiveList.Add(count);
 
+                if (consecutiveList.Count > TopHints[col].Hints.Count) return score;
+                //Adds one to score for every hint that has the coorsponding size
+                score = TopHints[col].Hints
+                    .TakeWhile((t, x) => x < consecutiveList.Count)
+                    .Where((t, x) => consecutiveList[x] == t).Count();
+                //If all a row's hints are satisfied, up score
+                if (score == TopHints[col].Hints.Count) score++;
+            }
             return score;
         }
 
         public override int GetHashCode()
         {
-            var id = "";
-            for (var i = 0; i < Size; i++)
-                for (var j = 0; j < Size; j++)
-                    id += Rows[i].Tiles[j].State;
+            var id = 0;
+            foreach (var row in Rows)
+                id ^= row.GetHashCode();
 
-            return id.GetHashCode();
+            return id;
         }
 
         public override bool Equals(object obj)

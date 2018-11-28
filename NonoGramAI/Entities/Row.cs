@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using NonoGramAI.Properties;
 
 namespace NonoGramAI.Entities
 {
@@ -8,21 +9,51 @@ namespace NonoGramAI.Entities
         public List<Tile> Tiles { get; }
         public int Index { get; }
         public int RowScore => GetRowScore();
+        private List<int> Hints { get; }
         private List<bool> Solution { get; }
 
-        public Row(List<Tile> tiles, int index, List<bool> solution)
+        public Row(List<Tile> tiles, int index, List<int> hints, List<bool> solution)
         {
             Tiles = tiles;
             Index = index;
+            Hints = hints;
             Solution = solution;
         }
 
         private int GetRowScore()
         {
-            var score = Tiles.Where((t, j) => t.State == Solution[j] && t.State).Count();
+            var score = 0;
+            if (Settings.Default.SolutionScoring)
+            {
+                score = Tiles.Where((t, j) => t.State == Solution[j] && t.State).Count();
 
-            if (score == Solution.Count(s => s))
-                score++;
+                if (score == Solution.Count(s => s))
+                    score++;
+            }
+            else
+            {
+                var consecutiveList = new List<int>();
+                var count = 0;
+                foreach (var t in Tiles)
+                {
+                    if (t.State)
+                        count++;
+                    else if (count > 0)
+                    {
+                        consecutiveList.Add(count);
+                        count = 0;
+                    }
+                }
+                if (count > 0) consecutiveList.Add(count);
+
+                if (consecutiveList.Count > Hints.Count) return score;
+                //Adds one to score for every hint that has the coorsponding size
+                score = Hints
+                    .TakeWhile((t, x) => x < consecutiveList.Count)
+                    .Where((t, x) => consecutiveList[x] == t).Count();
+                //If all a row's hints are satisfied, up score
+                if (score == Hints.Count) score++;
+            }
 
             return score;
         }
