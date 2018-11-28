@@ -148,7 +148,6 @@ namespace NonoGramAI.Entities
                 switch (method)
                 {
                     case 0:
-                        if (Settings.Default.SolveTrivial) break;
                         //Scoot: Go through a row using the hint values, and verify that the shaded squares match.
                         //       if there are too many shaded squares in a row, scoot them over to get the correct distribution.
                         //var tiles = mutation.GetConsecutiveList(row, true);
@@ -175,14 +174,14 @@ namespace NonoGramAI.Entities
                                 }
                                     
                             }
-                            else if (counter > 0)
+                            else if (counter > 0 && !mutation.Rows[row].Tiles[col].State && !mutation.Rows[row].Tiles[col].Set)
                             {
                                 if (position >= hints.Count || position < hints.Count && counter < hints[position])
                                     optimumSwaps.Add(col);
                                 position++;
                                 counter = 0;
                             }
-                            if (counter == 0)
+                            if (counter == 0 && !mutation.Rows[row].Tiles[col].State && !mutation.Rows[row].Tiles[col].Set)
                                 whiteSpace.Add(col);
                         }
                         if (swapCol != null)
