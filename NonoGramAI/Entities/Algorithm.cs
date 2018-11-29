@@ -38,14 +38,13 @@ namespace NonoGramAI.Entities
             return row;
         }
 
-        public static Grid Genetic(Grid grid)
+        public static Grid Genetic(Grid grid, bool stagnant)
         {
             //_grid = grid;
             var rnd = new Random();
             var population = grid.ExistingPop ?? new Dictionary<Grid, int>();
 
-            if (grid.Stagnant >= 25)
-                NaturalSelection(population);
+            if (stagnant) NaturalSelection(population);
 
             while (population.Count < Settings.Default.Population)
             {
@@ -61,23 +60,28 @@ namespace NonoGramAI.Entities
             }
             NaturalSelection(population);
             var alpha = population.OrderByDescending(g => g.Value).First().Key;
-            population.Remove(alpha);
-            while (population.Count < Settings.Default.Population)
+            var newPop = new Dictionary<Grid, int>();
+            foreach (var mem in population.Where(p => !Equals(p.Key, alpha)))
+                newPop.Add(mem.Key,mem.Value);
+
+            while (newPop.Count < Settings.Default.Population)
             {
-                var mate = population.OrderBy(p => rnd.Next()).First().Key;
+                var mate = population.Where(p => !Equals(p.Key, alpha)).OrderBy(p => rnd.Next()).First().Key;
                 Grid child;
                 do
                 {
                     child = Crossover(alpha, mate);
-                    child = Mutator(child);                   
-                    //child = child.Score > mutation.Score ? child : mutation;
-                } while (population.ContainsKey(child));
-                population.Add(child, child.Score);               
+                    var mutation = DoMutation(child);
+                    child = child.Score > mutation.Score ? child : mutation;
+                } while (newPop.ContainsKey(child));
+                newPop.Add(child, child.Score);               
             }
 
-            var finalGrid = population.OrderByDescending(p => p.Value).First().Key;
-            finalGrid.ExistingPop = population;
-            return finalGrid;
+
+            var finalGrid = newPop.OrderByDescending(p => p.Value).First().Key;
+            finalGrid.ExistingPop = newPop;
+            alpha.ExistingPop = newPop;
+            return finalGrid.Score > alpha.Score ? finalGrid : alpha;
         }
 
         private static void NaturalSelection(Dictionary<Grid, int> population)
@@ -134,12 +138,23 @@ namespace NonoGramAI.Entities
             return newGrid;
         }
 
-        private static Grid Mutator(Grid original)
+        private static Grid DoMutation(Grid grid)
+        {
+            var mutations = new List<Grid>
+            {
+                Mutator(grid, 0), 
+                Mutator(grid, 1), 
+                Mutator(Mutator(grid, 0), 1), 
+                Mutator(Mutator(grid, 1), 0)
+            };
+            return mutations.OrderByDescending(m => m.Score).First();
+        }
+
+        private static Grid Mutator(Grid original, int method)
         {
             var rnd = new Random();
             var newTiles = Grid.CopyTiles(original);
             var mutation = new Grid(newTiles,original.TopHints,original.SideHints, original.Solution);
-            var method = rnd.Next(2);
 
             for (var row = 0; row < original.Size; row++)
             {

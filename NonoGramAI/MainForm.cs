@@ -200,21 +200,25 @@ namespace NonoGramAI
             var timer = new Stopwatch();
             timer.Start();
             var data = new List<string>();
+            var stagnantCount = 0;
             for (var i = 0; i < _settings.Generations; i++)
             {
+                var stagnant = stagnantCount >= 10;
+                if (stagnant) stagnantCount = 0;
                 var tempGrid = grid;
-                grid = await Task<Grid>.Factory.StartNew(() => Algorithm.Genetic(tempGrid));
+                grid = await Task<Grid>.Factory.StartNew(() => Algorithm.Genetic(tempGrid,stagnant));
 
                 if (grid.Score > _grid.Score)
                 {
                     _grid = grid;
                     UpdateDisplay();
                     genLabel.Text = "Gen: " + i;
-                    
+                    stagnantCount = 0;
                 }                
                 else
-                    grid.Stagnant++;    
+                    stagnantCount++;    
 
+                Console.WriteLine(stagnantCount);
                 data.Add(i+", "+_grid.Score);
                 timerLabel.Text = timer.Elapsed.ToString();
             }
@@ -252,18 +256,22 @@ namespace NonoGramAI
             Task.WaitAll(taskList);
             */
             var grid = _grid;
-            for (var i = 0; i < Settings.Default.Population/2; i++)
+            var stagnantCount = 0;
+            timer.Start();
+            for (var i = 0; i < Settings.Default.Population/16; i++)
             {
+                var stagnant = stagnantCount >= 10;
+                if (stagnant) stagnantCount = 0;
                 for (var j = 0; j < Settings.Default.Generations; j++)
                 {
                     var tempGrid = grid;
-                    grid = await Task<Grid>.Factory.StartNew(() => Algorithm.Genetic(tempGrid));
+                    grid = await Task<Grid>.Factory.StartNew(() => Algorithm.Genetic(tempGrid,stagnant));
 
                     if (grid.Score <= _grid.Score)
-                        grid.Stagnant++; 
+                        stagnantCount++; 
                 }
-
                 results.Add(grid);
+                timerLabel.Text = timer.Elapsed.ToString();
             }
 
             _grid = Crowds.Crowd(results.ToList());

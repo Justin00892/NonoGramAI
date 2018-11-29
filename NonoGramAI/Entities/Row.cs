@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
-using NonoGramAI.Properties;
 
 namespace NonoGramAI.Entities
 {
@@ -23,38 +23,59 @@ namespace NonoGramAI.Entities
         private int GetRowScore()
         {
             var score = 0;
-            if (Settings.Default.SolutionScoring)
+            var pos = 0;
+            foreach (var hint in Hints)
             {
-                score = Tiles.Where((t, j) => t.State == Solution[j] && t.State).Count();
-
-                if (score == Solution.Count(s => s))
-                    score++;
-            }
-            else
-            {
-                var consecutiveList = new List<int>();
                 var count = 0;
-                foreach (var t in Tiles)
+                var broken = false;
+                while(pos < Tiles.Count)
                 {
-                    if (t.State)
-                        count++;
-                    else if (count > 0)
+                    if (count > hint)
                     {
-                        consecutiveList.Add(count);
-                        count = 0;
+                        score -= count;
+                        pos++;
+                        break;
                     }
-                }
-                if (count > 0) consecutiveList.Add(count);
+                    if (!broken)
+                    {
+                        if (Tiles[pos].State) count++;
 
-                if (consecutiveList.Count > Hints.Count) return score;
-                //Adds one to score for every hint that has the coorsponding size
-                score = Hints
-                    .TakeWhile((t, x) => x < consecutiveList.Count)
-                    .Where((t, x) => consecutiveList[x] == t).Count();
-                //If all a row's hints are satisfied, up score
-                if (score == Hints.Count) score++;
+                        else if (count > 0)
+                        {
+                            if (count == hint)
+                            {
+                                score += count;
+                                pos++;
+                                break;
+                            }
+
+                            broken = true;
+                            score--;
+                        }
+                    }
+                    else
+                    {
+                        if (Tiles[pos].State)
+                        {
+                            count++;
+                            if (count == hint)
+                            {
+                                pos++;
+                                break;
+                            }
+                        }
+                        else score--;
+                    }
+
+                    pos++;
+                }
+
             }
 
+            if (score == Hints.Sum())
+                score *= 2;
+
+            //Console.WriteLine("Row: " + Index + ", Score: "+score);
             return score;
         }
 

@@ -12,7 +12,6 @@ namespace NonoGramAI.Entities
         public List<Hint> SideHints { get; }
         public int Size => Rows.Count;
         public int Score => GetScore();
-        public int Stagnant { get; set; }
         public List<List<bool>> Solution { get; }
         public Dictionary<Grid, int> ExistingPop { get; set; }
 
@@ -226,39 +225,41 @@ namespace NonoGramAI.Entities
 
         private int GetColScore(int col)
         {
-            var score = 0;
-            if (Settings.Default.SolutionScoring)
+            var hints = TopHints[col].Hints;
+            var consecutiveList = new List<int>();
+            var count = 0;
+            for (var row = 0; row < Size; row++)
             {
-                for (var i = 0; i < Size; i++)
-                    if (Rows[i].Tiles[col].State == Solution[i][col] && Rows[i].Tiles[col].State)
-                        score++;
-                if (score == TopHints[col].Hints.Sum())
-                    score++;
-            }
-            else
-            {
-                var consecutiveList = new List<int>();
-                var count = 0;
-                for (var row = 0; row < Size; row++)
+                if (Rows[row].Tiles[col].State)
+                    count++;
+                else if (count > 0)
                 {
-                    if (Rows[row].Tiles[col].State)
-                        count++;
-                    else if (count > 0)
-                    {
-                        consecutiveList.Add(count);
-                        count = 0;
-                    }
+                    consecutiveList.Add(count);
+                    count = 0;
                 }
-                if (count > 0) consecutiveList.Add(count);
-
-                if (consecutiveList.Count > TopHints[col].Hints.Count) return score;
-                //Adds one to score for every hint that has the coorsponding size
-                score = TopHints[col].Hints
-                    .TakeWhile((t, x) => x < consecutiveList.Count)
-                    .Where((t, x) => consecutiveList[x] == t).Count();
-                //If all a row's hints are satisfied, up score
-                if (score == TopHints[col].Hints.Count) score++;
             }
+            if (count > 0) consecutiveList.Add(count);
+
+            var score = 0;
+            var pos = 0;
+            foreach (var hint in hints)
+            {                
+                while(pos < consecutiveList.Count)
+                {
+                    if (consecutiveList[pos] == hint)
+                    {
+                        score += hint;
+                        pos++;
+                        break;
+                    }
+                    score -= consecutiveList[pos];
+                    pos++;
+                }
+            }
+
+            if (score == hints.Sum()) score *= 2;
+
+            Console.WriteLine("Col: " + col + ", Score: "+score);
             return score;
         }
 
