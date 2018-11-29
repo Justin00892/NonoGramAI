@@ -184,6 +184,7 @@ namespace NonoGramAI.Entities
             }
 
             if (col < 0) return;
+            if (Rows[row].Tiles[col].Set) return;
 
             var temp = Rows[row].Tiles[end].State;
             var placeholder = Rows[row].Tiles[col].State;
